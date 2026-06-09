@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events — AIC Ruiru</title>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/home.css">
+  <link rel="stylesheet" href="../assets/css/content.css">
+</head>
+<body>
+
+  <!-- Site nav (reused from homepage) -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="nav-brand" href="../index.html"><span>AIC</span> Ruiru</a>
+      <div class="nav-links">
+        <a href="about.html">About</a>
+        <a href="events.html" class="active-nav-link">Events</a>
+        <a href="news.html">News</a>
+        <a href="login.html" class="btn btn-accent btn-sm" id="nav-login-btn">Member Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page hero strip -->
+  <div class="content-page-hero">
+    <div class="container">
+      <h1>Upcoming Events</h1>
+      <p>Join us for worship, fellowship, and community events at AIC Ruiru.</p>
+    </div>
+  </div>
+
+  <!-- Two-column layout: filter panel + grid -->
+  <div class="content-page-layout">
+
+    <!-- Collapsible filter panel -->
+    <aside class="filter-panel" id="filter-panel">
+      <div class="filter-panel-header">
+        <span class="filter-panel-title">Filters</span>
+        <button class="filter-panel-toggle" id="filter-toggle-btn" title="Collapse filters" aria-label="Toggle filters">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+      <div class="filter-panel-body" id="filter-panel-body">
+        <div class="filter-group">
+          <label class="filter-label">Category</label>
+          <input type="text" id="category-filter" class="form-input form-input-sm" placeholder="e.g. Youth, Worship…">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">From date</label>
+          <input type="date" id="from-filter" class="form-input form-input-sm">
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">To date</label>
+          <input type="date" id="to-filter" class="form-input form-input-sm">
+        </div>
+        <button class="btn btn-outline btn-sm btn-full" id="clear-filters-btn" style="margin-top:var(--space-sm)">Clear filters</button>
+      </div>
+    </aside>
+
+    <!-- Content area -->
+    <main class="content-page-main">
+      <div id="events-grid" class="content-grid"></div>
+
+      <div id="load-more-wrap" class="load-more-wrap hidden">
+        <button class="btn btn-outline" id="load-more-btn">Load more</button>
+      </div>
+
+      <p id="empty-msg" class="text-muted" style="display:none;padding:var(--space-xl) 0;">No upcoming events found.</p>
+    </main>
+  </div>
+
+  <!-- Site footer -->
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <h3 class="footer-brand"><span>AIC</span> Ruiru</h3>
+        <p>A community of faith, hope, and love in Ruiru, Kenya.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="about.html">About</a>
+        <a href="events.html">Events</a>
+        <a href="news.html">News</a>
+        <a href="login.html">Member Login</a>
+      </div>
+      <div class="footer-col">
+        <h4>Visit Us</h4>
+        <p>Ruiru Town, Kiambu County, Kenya</p>
+        <p>Sunday Service · 9:00 AM</p>
+      </div>
+    </div>
+    <div class="footer-bottom container">
+      <p>&copy; <span id="footer-year"></span> AIC Ruiru. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Detail modal -->
+  <div id="detail-modal" class="content-detail-overlay" role="dialog" aria-modal="true">
+    <div class="content-detail-box">
+      <button class="content-detail-close" onclick="closeDetail()" aria-label="Close">&times;</button>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <button class="scroll-top-btn hidden" id="scroll-top-btn" title="Back to top" aria-label="Scroll to top">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <script type="module" src="../assets/js/pages/events.js"></script>
+</body>
+</html>

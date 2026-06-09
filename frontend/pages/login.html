@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — AIC Ruiru</title>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/auth.css">
+</head>
+<body class="auth-body">
+  <aside class="auth-brand">
+    <div class="auth-brand-inner">
+      <h1 class="auth-brand-logo"><span>AIC</span> Ruiru</h1>
+      <p class="auth-brand-tagline">A community of faith, hope, and love.</p>
+      <blockquote class="auth-verse">"And they continued steadfastly… in fellowship."<cite>Acts 2:42</cite></blockquote>
+    </div>
+  </aside>
+  <div class="login-wrap">
+    <div class="login-logo">
+      <h1><span>AIC</span> Ruiru</h1>
+      <p>Member Portal</p>
+    </div>
+    <div class="card">
+      <div id="alert" class="hidden"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="identifier">Email or Phone</label>
+          <input class="form-input" type="text" id="identifier" name="identifier" placeholder="you@example.com" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-input" type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="submit-btn">Log In</button>
+      </form>
+
+      <div class="divider">— or —</div>
+      <p class="text-center" style="font-size:var(--font-size-sm)">
+        <a href="forgot-password.html">Forgot password?</a>
+      </p>
+      <p class="text-center" style="font-size:var(--font-size-sm)">
+        Not a member yet? <a href="register.html">Register here</a>
+      </p>
+    </div>
+  </div>
+
+  <a class="home-fab" href="../index.html" title="Church website">🏠</a>
+  <button class="theme-fab" id="theme-fab" title="Toggle theme">☀️</button>
+  <script type="module" src="../assets/js/pages/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+:root {
+  /* Brand — warm & welcoming */
+  --color-primary: #2f6b5e;        /* muted teal */
+  --color-primary-light: #3d8975;  /* hover / links */
+  --color-primary-dark: #234f45;   /* sidebar / depth */
+  --color-accent: #d98c5f;         /* terracotta */
+  --color-accent-light: #e8a87f;
+
+  /* Neutrals — warm */
+  --color-bg: #faf7f2;             /* warm cream */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f4efe7;    /* warm panel */
+  --color-border: #e7e0d4;         /* warm border */
+  --color-text: #2a2722;
+  --color-text-muted: #7a7268;
+
+  /* Status */
+  --color-success: #4a9d6b;
+  --color-danger: #d4654f;
+  --color-warning: #e0a92e;
+  --color-info: #3d8975;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-display: 2.75rem;
+
+  /* Radius — softer */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* Shadow — warm-tinted, layered */
+  --shadow-sm: 0 1px 2px rgba(60,50,40,0.06);
+  --shadow-md: 0 4px 16px rgba(60,50,40,0.08);
+  --shadow-lg: 0 12px 32px rgba(60,50,40,0.12);
+}
+
+[data-theme="dark"] {
+  --color-bg:           #1a1816;
+  --color-surface:      #241f1c;
+  --color-surface-alt:  #2c2723;
+  --color-border:       #3a332d;
+  --color-text:         #f0ebe3;
+  --color-text-muted:   #a89e92;
+  /* lift active/brand states for contrast on dark */
+  --color-primary:      #3d8975;
+  --color-primary-light: #57a892;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.35);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.45);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.55);
+}

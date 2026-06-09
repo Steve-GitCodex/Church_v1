@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — AIC Ruiru</title>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/home.css">
+  <link rel="stylesheet" href="../assets/css/about.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="nav-brand" href="../index.html"><span>AIC</span> Ruiru</a>
+      <div class="nav-links">
+        <a href="about.html" class="active-nav-link">About</a>
+        <a href="events.html">Events</a>
+        <a href="news.html">News</a>
+        <a href="login.html" class="btn btn-accent btn-sm" id="nav-login-btn">Member Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="about-hero" id="about-hero">
+    <div class="container">
+      <h1 id="about-heading">About AIC Ruiru</h1>
+      <p id="about-subheading">A vibrant, growing church in Ruiru, Kenya — part of the Africa Inland Church family.</p>
+    </div>
+  </div>
+
+  <!-- Mission · Vision · Story -->
+  <section class="about-section">
+    <div class="container">
+      <h2 class="about-section-title">Our Mission &amp; Vision</h2>
+      <div class="about-mvs-grid">
+        <div class="about-mvs-card">
+          <h3>Mission</h3>
+          <p id="about-mission">Loading…</p>
+        </div>
+        <div class="about-mvs-card">
+          <h3>Vision</h3>
+          <p id="about-vision">Loading…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Our Story -->
+  <section class="about-section about-section-alt">
+    <div class="container">
+      <h2 class="about-section-title">Our Story</h2>
+      <div class="about-story-panel">
+        <p id="about-story">Loading…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- What We Believe -->
+  <section class="about-section">
+    <div class="container">
+      <h2 class="about-section-title">What We Believe</h2>
+      <ul class="beliefs-list" id="beliefs-list"></ul>
+    </div>
+  </section>
+
+  <!-- Leadership -->
+  <section class="about-section about-section-alt">
+    <div class="container">
+      <h2 class="about-section-title">Our Leadership</h2>
+      <div class="leaders-grid" id="leaders-grid"></div>
+    </div>
+  </section>
+
+  <!-- Service Times -->
+  <section class="about-section">
+    <div class="container">
+      <h2 class="about-section-title">Service Times</h2>
+      <div class="service-times" id="service-times-grid"></div>
+    </div>
+  </section>
+
+  <!-- Location & Contact -->
+  <section class="about-section about-section-alt">
+    <div class="container">
+      <h2 class="about-section-title">Find Us</h2>
+      <div class="about-location-grid">
+        <div class="about-contact-card" id="about-contact-card"></div>
+        <div class="about-map-wrap" id="about-map-wrap">
+          <div class="about-map-placeholder">Map not configured</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Site footer -->
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <h3 class="footer-brand"><span>AIC</span> Ruiru</h3>
+        <p>A community of faith, hope, and love in Ruiru, Kenya.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="about.html">About</a>
+        <a href="events.html">Events</a>
+        <a href="news.html">News</a>
+        <a href="login.html">Member Login</a>
+      </div>
+      <div class="footer-col">
+        <h4>Visit Us</h4>
+        <p id="footer-address">Ruiru Town, Kiambu County, Kenya</p>
+        <p>Sunday Service · 9:00 AM</p>
+      </div>
+    </div>
+    <div class="footer-bottom container">
+      <p>&copy; <span id="footer-year"></span> AIC Ruiru. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <button class="scroll-top-btn hidden" id="scroll-top-btn" title="Back to top" aria-label="Scroll to top">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+  <button class="theme-fab" id="theme-fab" title="Toggle theme">☀️</button>
+
+  <script type="module" src="../assets/js/pages/about.js"></script>
+</body>
+</html>

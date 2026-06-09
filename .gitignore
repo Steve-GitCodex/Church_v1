@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.local
+*.log
+dist/
+build/
+.DS_Store
+Thumbs.db
+
+# Internal docs — never commit
+SETUP.md
+PHASES.md
+
+# Uploaded images (keep .gitkeep to track the empty dir)
+backend/uploads/*
+!backend/uploads/.gitkeep
+Church_v1.code-workspace

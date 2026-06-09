@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — AIC Ruiru</title>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <a href="../index.html" class="sidebar-logo" title="Church website">
+      <h2><span>AIC</span> Ruiru</h2>
+      <p>Member Portal</p>
+    </a>
+    <nav class="sidebar-nav">
+      <button class="nav-link active" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span class="nav-label">Dashboard</span></button>
+      <button class="nav-link" data-page="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-label">My Profile</span></button>
+      <button class="nav-link giving-feature-nav" data-page="givings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="nav-label">My Givings</span></button>
+      <button class="nav-link member-content-nav" data-page="news"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8z"/></svg><span class="nav-label">News</span> <span id="news-badge" class="nav-badge" style="display:none"></span></button>
+      <button class="nav-link member-content-nav" data-page="events"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nav-label">Events</span> <span id="events-badge" class="nav-badge" style="display:none"></span></button>
+
+      <div class="nav-section admin-only hidden">Administration</div>
+      <button class="nav-link admin-only hidden" data-page="pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="nav-label">Pending Approvals</span> <span id="pending-badge" class="badge badge-pending" style="margin-left:auto;display:none"></span></button>
+      <button class="nav-link admin-only hidden" data-page="members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-label">All Members</span></button>
+      <button class="nav-link admin-only hidden" data-page="update-requests"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span class="nav-label">Update Requests</span> <span id="update-requests-badge" class="badge badge-pending" style="margin-left:auto;display:none"></span></button>
+      <button class="nav-link admin-only hidden" data-page="invites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span class="nav-label">Invite Links</span></button>
+      <button class="nav-link admin-only hidden" data-page="households"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-label">Households</span></button>
+      <button class="nav-link admin-only hidden" data-page="ministries"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M5 8h14"/><path d="M5 8l-2 8a4 4 0 0 0 8 0z"/><path d="M19 8l2 8a4 4 0 0 1-8 0z"/></svg><span class="nav-label">Ministries</span></button>
+      <button class="nav-link content-manager-nav hidden" data-page="content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span class="nav-label">Content</span></button>
+      <button class="nav-link admin-only hidden" data-page="about-editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span class="nav-label">About Page</span></button>
+      <div class="nav-section givings-manager-nav giving-feature-nav hidden">Givings</div>
+      <button class="nav-link givings-manager-nav giving-feature-nav hidden" data-page="givings-admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="nav-label">Givings Ledger</span></button>
+      <button class="nav-link givings-manager-nav giving-feature-nav hidden" data-page="giving-projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span class="nav-label">Giving Projects</span></button>
+      <button class="nav-link givings-manager-nav giving-feature-nav hidden" data-page="giving-requests"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><circle cx="18" cy="6" r="4"/></svg><span class="nav-label">Corrections</span> <span id="giving-requests-badge" class="badge badge-pending" style="margin-left:auto;display:none"></span></button>
+      <div class="nav-section super-admin-only hidden">System</div>
+      <button class="nav-link super-admin-only hidden" data-page="system"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="nav-label">System</span></button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn btn-outline btn-sm btn-full" id="logout-btn" style="border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.75)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="nav-label">Log Out</span></button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="page-title">Dashboard</span>
+      <div class="notif-wrapper" id="notif-wrapper">
+        <button class="topbar-icon-btn notif-bell-btn" id="notif-btn" title="Notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-dot" id="notif-dot" style="display:none"></span>
+        </button>
+        <div class="notif-dropdown" id="notif-dropdown" style="display:none">
+          <div class="notif-dropdown-head">
+            <span class="notif-dropdown-title">Notifications</span>
+            <button class="btn btn-sm btn-ghost" id="notif-mark-all-btn">Mark all read</button>
+          </div>
+          <div id="notif-list" class="notif-list"><p class="text-muted notif-empty">Loading…</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- Dashboard page -->
+      <div class="page active" id="page-dashboard">
+        <div class="dash-greeting" id="dash-greeting">
+          <div>
+            <div class="dash-greeting-text" id="greeting-text">Welcome back</div>
+            <div class="dash-greeting-sub">Here's what's happening at AIC Ruiru.</div>
+          </div>
+        </div>
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="quick-actions admin-only hidden" id="quick-actions-admin">
+          <h3 class="quick-actions-label">Quick actions</h3>
+          <div class="quick-actions-row">
+            <button class="quick-action" onclick="openCreateMemberModal()">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              Add Member
+            </button>
+            <button class="quick-action" onclick="goToPage('invites')">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Create Invite
+            </button>
+            <button class="quick-action" onclick="goToPage('pending')">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Review Pending
+            </button>
+          </div>
+        </div>
+        <div class="quick-actions member-quick hidden" id="quick-actions-member">
+          <h3 class="quick-actions-label">Quick actions</h3>
+          <div class="quick-actions-row">
+            <button class="quick-action" onclick="goToPage('profile')">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              My Profile
+            </button>
+            <button class="quick-action" onclick="goToPage('givings')">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              My Givings
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile page -->
+      <div class="page" id="page-profile">
+        <h2 class="page-title-lg">My Profile</h2>
+        <div class="profile-grid" id="profile-grid">
+          <p class="text-muted">Loading…</p>
+        </div>
+      </div>
+
+      <!-- My Givings page (member view) -->
+      <div class="page" id="page-givings">
+        <h2 class="page-title-lg">My Givings</h2>
+        <div id="my-givings-summary" class="giving-summary-row" style="margin-bottom:var(--space-xl);"></div>
+        <div class="table-card">
+          <div id="my-givings-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- Givings Ledger (admin/treasurer) -->
+      <div class="page givings-manager-nav hidden" id="page-givings-admin">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Givings Ledger</h2>
+          <button class="btn btn-primary btn-sm" onclick="openGivingModal(null)">+ Record Giving</button>
+        </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-md);flex-wrap:wrap;align-items:center;">
+          <div class="member-search-wrap" style="width:200px;">
+            <input class="form-input" type="text" id="ledger-member-search" placeholder="Filter by member…" autocomplete="off">
+            <div id="ledger-member-results" class="member-search-dropdown hidden"></div>
+          </div>
+          <select class="form-select" id="ledger-project-filter" style="width:auto;"><option value="">All projects</option></select>
+          <select class="form-select" id="ledger-method-filter" style="width:auto;">
+            <option value="">All methods</option>
+            <option value="CASH">Cash</option>
+            <option value="MPESA">M-Pesa</option>
+            <option value="BANK_TRANSFER">Bank Transfer</option>
+            <option value="CARD">Card</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <input class="form-input" type="date" id="ledger-from-filter" style="width:auto;" title="From date">
+          <input class="form-input" type="date" id="ledger-to-filter" style="width:auto;" title="To date">
+          <label style="display:flex;align-items:center;gap:var(--space-xs);font-size:var(--font-size-sm);white-space:nowrap;cursor:pointer;">
+            <input type="checkbox" id="ledger-voided-filter"> Include voided
+          </label>
+        </div>
+        <div id="ledger-total" style="margin-bottom:var(--space-md);font-size:var(--font-size-sm);color:var(--color-text-muted);font-weight:600;"></div>
+        <div class="table-card">
+          <div id="ledger-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        <div id="ledger-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
+          <button class="btn btn-outline btn-sm" id="ledger-prev-btn" onclick="goLedgerPage(-1)">← Prev</button>
+          <span id="ledger-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
+          <button class="btn btn-outline btn-sm" id="ledger-next-btn" onclick="goLedgerPage(1)">Next →</button>
+        </div>
+      </div>
+
+      <!-- Giving Projects (admin/treasurer) -->
+      <div class="page givings-manager-nav hidden" id="page-giving-projects">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Giving Projects</h2>
+          <button class="btn btn-primary btn-sm" onclick="openProjectModal(null)">+ New Project</button>
+        </div>
+        <div class="table-card">
+          <div id="projects-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- Correction Requests (admin/treasurer) -->
+      <div class="page givings-manager-nav hidden" id="page-giving-requests">
+        <h2 class="page-title-lg">Correction Requests</h2>
+        <div class="table-card">
+          <div id="correction-requests-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- System Settings (SUPER_ADMIN) -->
+      <div class="page super-admin-only hidden" id="page-system">
+        <h2 class="page-title-lg">System Settings</h2>
+        <div class="card" style="max-width:500px;">
+          <h3 style="margin-bottom:var(--space-lg)">Feature Toggles</h3>
+          <div id="feature-toggle-givings" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;border-bottom:1px solid var(--color-border);">
+            <div>
+              <div style="font-weight:600;font-size:var(--font-size-sm);">Givings Module</div>
+              <div style="font-size:var(--font-size-sm);color:var(--color-text-muted);">Enable or disable the entire givings feature for all users</div>
+            </div>
+            <label class="toggle-switch" title="Toggle givings feature">
+              <input type="checkbox" id="feature-givings-checkbox">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <p class="form-hint" style="margin-top:var(--space-md)">Changes take effect immediately. When disabled, the Givings module is hidden for everyone — including admins.</p>
+        </div>
+      </div>
+
+      <!-- Pending approvals page (admin) -->
+      <div class="page" id="page-pending">
+        <h2 class="page-title-lg">Pending Approvals</h2>
+        <div class="table-card">
+          <div id="pending-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- Members list (admin) -->
+      <div class="page" id="page-members">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">All Members</h2>
+          <button class="btn btn-primary btn-sm" onclick="openCreateMemberModal()">+ Add Member</button>
+        </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <input class="form-input" type="search" id="member-search" placeholder="Search name, email, phone…" style="flex:1;min-width:200px;">
+          <select class="form-select" id="member-status-filter" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="TRANSFERRED">Transferred</option>
+            <option value="DECEASED">Deceased</option>
+          </select>
+          <div class="member-search-wrap" style="width:180px;">
+            <input class="form-input" type="text" id="member-household-filter-search" placeholder="Filter by household…" autocomplete="off">
+            <div id="member-household-filter-results" class="member-search-dropdown hidden"></div>
+          </div>
+          <select class="form-select" id="member-ministry-filter" style="width:auto;">
+            <option value="">All ministries</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div id="members-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        <div id="members-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
+          <button class="btn btn-outline btn-sm" id="members-prev-btn" onclick="goMembersPage(-1)">← Prev</button>
+          <span id="members-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
+          <button class="btn btn-outline btn-sm" id="members-next-btn" onclick="goMembersPage(1)">Next →</button>
+        </div>
+      </div>
+
+      <!-- Profile Update Requests (admin) -->
+      <div class="page" id="page-update-requests">
+        <h2 class="page-title-lg">Profile Update Requests</h2>
+        <div class="table-card">
+          <div id="update-requests-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- Invite Links page (admin) -->
+      <div class="page" id="page-invites">
+        <h2 class="page-title-lg">Invite Links</h2>
+
+        <div class="card" style="margin-bottom:var(--space-xl)">
+          <h3 style="margin-bottom:var(--space-lg)">Create Invite</h3>
+          <div id="invite-alert" class="hidden"></div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <div style="display:flex;gap:var(--space-md);">
+              <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;">
+                <input type="radio" name="invite-type" value="INDIVIDUAL" checked> Individual (auto-approved)
+              </label>
+              <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;">
+                <input type="radio" name="invite-type" value="MASS"> Mass (standard approval)
+              </label>
+            </div>
+          </div>
+          <div class="form-group" id="invite-email-group">
+            <label class="form-label" for="invite-email">Invitee email</label>
+            <input class="form-input" type="email" id="invite-email" placeholder="person@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expires in</label>
+            <div style="display:flex;gap:var(--space-xs);flex-wrap:wrap;" id="expiry-quick">
+              <button type="button" class="expiry-chip" data-minutes="60">1 hour</button>
+              <button type="button" class="expiry-chip" data-minutes="360">6 hours</button>
+              <button type="button" class="expiry-chip" data-minutes="720">12 hours</button>
+              <button type="button" class="expiry-chip active" data-minutes="1440">1 day</button>
+              <button type="button" class="expiry-chip" data-minutes="4320">3 days</button>
+              <button type="button" class="expiry-chip" data-minutes="10080">7 days</button>
+              <button type="button" class="expiry-chip" data-minutes="20160">14 days</button>
+              <button type="button" class="expiry-chip" data-minutes="43200">30 days</button>
+              <button type="button" class="expiry-chip" data-minutes="custom">Custom…</button>
+            </div>
+            <div id="expiry-custom" style="display:none;margin-top:var(--space-sm);">
+              <input type="datetime-local" class="form-input" id="invite-expiry-date">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="invite-create-btn" onclick="createInviteLink()">Generate Link</button>
+
+          <div id="invite-result" class="hidden" style="margin-top:var(--space-lg);">
+            <label class="form-label">Invite link</label>
+            <div style="display:flex;gap:var(--space-sm);">
+              <input class="form-input" type="text" id="invite-link-output" readonly style="flex:1;font-size:var(--font-size-sm);">
+              <button class="btn btn-outline btn-sm" onclick="copyInviteLink()">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div id="invites-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- Households page (admin) -->
+      <div class="page" id="page-households">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Households</h2>
+          <button class="btn btn-primary btn-sm" onclick="openHouseholdCreateModal()">+ New Household</button>
+        </div>
+        <div class="table-card">
+          <div id="households-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+      </div>
+
+      <!-- Ministries page (admin) -->
+      <div class="page" id="page-ministries">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Ministries</h2>
+          <button class="btn btn-primary btn-sm" onclick="openMinistryCreateModal()">+ New Ministry</button>
+        </div>
+        <div class="table-card">
+          <div id="ministries-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        <div id="ministries-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
+          <button class="btn btn-outline btn-sm" id="ministries-prev-btn" onclick="goMinistriesPage(-1)">← Prev</button>
+          <span id="ministries-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
+          <button class="btn btn-outline btn-sm" id="ministries-next-btn" onclick="goMinistriesPage(1)">Next →</button>
+        </div>
+      </div>
+
+      <!-- News & Announcements page (all roles) -->
+      <div class="page" id="page-news">
+        <h2 class="page-title-lg">News &amp; Announcements</h2>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;align-items:center;">
+          <select class="form-select" id="news-type-filter" style="width:auto;">
+            <option value="">All types</option>
+            <option value="NEWS">News</option>
+            <option value="ANNOUNCEMENT">Announcement</option>
+          </select>
+          <input class="form-input" type="text" id="news-category-filter" placeholder="Category…" style="width:160px;">
+          <input class="form-input" type="date" id="news-from-filter" title="From date" style="width:auto;">
+          <input class="form-input" type="date" id="news-to-filter" title="To date" style="width:auto;">
+          <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;font-size:var(--font-size-sm);white-space:nowrap;">
+            <input type="checkbox" id="news-unseen-filter"> Unseen only
+          </label>
+        </div>
+        <div id="news-list" class="content-cards-grid">
+          <p class="text-muted">Loading…</p>
+        </div>
+        <div id="news-load-more" class="load-more-wrap hidden">
+          <button class="btn btn-outline btn-sm" onclick="loadMoreNews()">Load more</button>
+        </div>
+      </div>
+
+      <!-- Events page (all roles) -->
+      <div class="page" id="page-events">
+        <h2 class="page-title-lg">Events</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-sm);align-items:center;margin-bottom:var(--space-lg);">
+          <input class="form-input" type="text" id="events-category-filter" placeholder="Category…" style="width:160px;">
+          <input class="form-input" type="date" id="events-from-filter" title="From date" style="width:auto;">
+          <input class="form-input" type="date" id="events-to-filter" title="To date" style="width:auto;">
+          <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;font-size:var(--font-size-sm);white-space:nowrap;">
+            <input type="checkbox" id="events-unseen-filter"> Unseen only
+          </label>
+        </div>
+        <div id="events-list" class="content-cards-grid">
+          <p class="text-muted">Loading…</p>
+        </div>
+        <div id="events-load-more" class="load-more-wrap hidden">
+          <button class="btn btn-outline btn-sm" onclick="loadMoreEvents()">Load more</button>
+        </div>
+      </div>
+
+      <!-- About page editor (admin) -->
+      <div class="page admin-only hidden" id="page-about-editor">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">About Page</h2>
+          <button class="btn btn-primary btn-sm" onclick="saveAboutEditor()">Save changes</button>
+        </div>
+        <div id="about-editor-form"></div>
+      </div>
+
+      <!-- Content management page (admin) -->
+      <div class="page content-manager-nav hidden" id="page-content">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Content</h2>
+          <button class="btn btn-primary btn-sm" onclick="openContentCreateModal()">+ New Post</button>
+        </div>
+
+        <!-- Segmented type filter -->
+        <div class="seg-control" id="content-type-seg">
+          <button class="seg-btn active" data-value="">All</button>
+          <button class="seg-btn" data-value="NEWS">News</button>
+          <button class="seg-btn" data-value="ANNOUNCEMENT">Announcements</button>
+          <button class="seg-btn" data-value="EVENT">Events</button>
+        </div>
+
+        <!-- Status filter -->
+        <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <span style="font-size:var(--font-size-sm);color:var(--color-text-muted);">Status:</span>
+          <div class="seg-control seg-control-sm" id="content-status-seg">
+            <button class="seg-btn active" data-value="">All</button>
+            <button class="seg-btn" data-value="DRAFT">Draft</button>
+            <button class="seg-btn" data-value="PUBLISHED">Published</button>
+            <button class="seg-btn" data-value="ARCHIVED">Archived</button>
+          </div>
+          <span id="content-admin-count" style="font-size:var(--font-size-sm);color:var(--color-text-muted);margin-left:auto;"></span>
+        </div>
+
+        <div class="table-card">
+          <div id="content-admin-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+
+        <!-- Load more -->
+        <div id="content-admin-load-more" class="load-more-wrap hidden">
+          <button class="btn btn-outline btn-sm" onclick="loadMoreContentAdmin()">Load more</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right utility panel -->
+  <aside class="utility-panel" id="utility-panel">
+    <button class="util-collapse-btn" id="util-collapse" title="Collapse panel" aria-label="Collapse utility panel">
+      <svg id="util-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+
+    <!-- Scrollable inner content — panel itself stays overflow:visible so the tab pokes out -->
+    <div class="util-content">
+
+      <!-- Identity -->
+      <div class="util-identity">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="util-identity-info">
+          <div class="util-name" id="user-fullname">Loading…</div>
+          <div class="util-role" id="user-role"></div>
+        </div>
+      </div>
+
+      <div class="util-divider"></div>
+
+      <!-- Utility actions -->
+      <nav class="util-nav">
+        <button class="util-item" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light mode">
+          <span class="util-icon" id="theme-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </span>
+          <span class="util-label">Toggle Theme</span>
+        </button>
+
+        <a class="util-item" href="../index.html" title="Visit church website" aria-label="Visit church website">
+          <span class="util-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </span>
+          <span class="util-label">Visit Website</span>
+        </a>
+
+        <!-- Settings placeholder — page to be built in a future phase -->
+        <button class="util-item util-item-disabled" title="Settings (coming soon)" aria-label="Settings" disabled>
+          <span class="util-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </span>
+          <span class="util-label">Settings</span>
+        </button>
+        <!-- Future items (Notifications detail, Account, etc.) slot in here -->
+      </nav>
+
+    </div>
+  </aside>
+
+</div>
+
+<!-- Role management modal -->
+<div class="modal-overlay" id="role-modal">
+  <div class="modal-box">
+    <h3 id="modal-title">Manage Role</h3>
+    <div id="modal-alert" class="hidden"></div>
+
+    <div class="form-group">
+      <label class="form-label">Role</label>
+      <select class="form-select" id="modal-role">
+        <option value="MEMBER">Member</option>
+        <option value="STAFF">Staff</option>
+        <option value="ADMIN">Admin</option>
+        <option value="SUPER_ADMIN">Super Admin</option>
+      </select>
+    </div>
+
+    <div id="permissions-section" style="display:none;">
+      <label class="form-label" style="margin-bottom:var(--space-xs)">Staff Permissions</label>
+      <div class="permission-grid">
+        <label class="permission-item"><input type="checkbox" id="perm-manageContent"> Manage Content</label>
+        <label class="permission-item"><input type="checkbox" id="perm-manageGivings"> Manage Givings</label>
+        <label class="permission-item"><input type="checkbox" id="perm-manageEvents"> Manage Events</label>
+        <label class="permission-item"><input type="checkbox" id="perm-manageMembers"> Manage Members</label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeRoleModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="modal-save-btn" onclick="saveRole()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Member edit modal -->
+<div class="modal-overlay" id="member-edit-modal">
+  <div class="modal-box" style="max-width:560px;">
+    <h3 id="member-edit-title">Edit Member</h3>
+    <div id="member-edit-alert" class="hidden"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);">
+      <div class="form-group">
+        <label class="form-label">First Name</label>
+        <input class="form-input" type="text" id="edit-firstName">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        <input class="form-input" type="text" id="edit-lastName">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Middle Name</label>
+      <input class="form-input" type="text" id="edit-middleName">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);">
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" type="tel" id="edit-phone">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Membership Status</label>
+        <select class="form-select" id="edit-membershipStatus">
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+          <option value="TRANSFERRED">Transferred</option>
+          <option value="DECEASED">Deceased</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Address</label>
+      <input class="form-input" type="text" id="edit-address">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);">
+      <div class="form-group">
+        <label class="form-label">Date of Birth</label>
+        <input class="form-input" type="date" id="edit-dateOfBirth">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date Joined</label>
+        <input class="form-input" type="date" id="edit-dateJoined">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Baptism Date</label>
+        <input class="form-input" type="date" id="edit-baptismDate">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Household</label>
+      <div class="member-search-wrap">
+        <input class="form-input" type="text" id="edit-household-search" placeholder="Type to search households…" autocomplete="off">
+        <div id="edit-household-results" class="member-search-dropdown hidden"></div>
+      </div>
+      <p id="edit-household-selected" class="form-hint" style="margin-top:var(--space-xs)"></p>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-sm" id="member-deactivate-btn" style="border:1px solid var(--color-danger,#dc2626);color:var(--color-danger,#dc2626);background:none;" onclick="toggleMemberActive()">Deactivate</button>
+      <div style="display:flex;gap:var(--space-md);">
+        <button class="btn btn-outline btn-sm" onclick="closeMemberEditModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="member-edit-save-btn" onclick="saveMemberEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create member modal (admin direct-create) -->
+<div class="modal-overlay" id="create-member-modal">
+  <div class="modal-box" style="max-width:440px;">
+    <h3>Add Member</h3>
+    <div id="create-member-alert" class="hidden"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);">
+      <div class="form-group">
+        <label class="form-label">First Name</label>
+        <input class="form-input" type="text" id="new-firstName" placeholder="e.g. Jane">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        <input class="form-input" type="text" id="new-lastName" placeholder="e.g. Kamau">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="new-email" placeholder="person@example.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone <span style="font-weight:400;text-transform:none;font-size:0.8em;">(optional)</span></label>
+      <input class="form-input" type="tel" id="new-phone" placeholder="e.g. 0712 345 678">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeCreateMemberModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="create-member-save-btn" onclick="saveNewMember()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- Household create/rename modal -->
+<div class="modal-overlay" id="household-modal">
+  <div class="modal-box" style="max-width:400px;">
+    <h3 id="household-modal-title">New Household</h3>
+    <div id="household-modal-alert" class="hidden"></div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" type="text" id="household-name-input" placeholder="e.g. Kamau Family">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeHouseholdModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="household-save-btn" onclick="saveHousehold()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Household detail modal -->
+<div class="modal-overlay" id="household-detail-modal">
+  <div class="modal-box" style="max-width:500px;">
+    <h3 id="household-detail-title">Household</h3>
+
+    <!-- Add member form — top -->
+    <div style="margin-bottom:var(--space-lg);">
+      <p class="form-label" style="margin-bottom:var(--space-sm)">Add member</p>
+      <div class="member-search-wrap">
+        <input class="form-input" type="text" id="household-member-search"
+               placeholder="Search by name…" autocomplete="off">
+        <div id="household-member-results" class="member-search-dropdown hidden"></div>
+      </div>
+    </div>
+
+    <!-- Current members list — below -->
+    <div style="border-top:1px solid var(--color-border);padding-top:var(--space-md);">
+      <p class="form-label" style="margin-bottom:var(--space-sm)">Current members</p>
+      <div id="household-detail-members" style="max-height:260px;overflow-y:auto;"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeHouseholdDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ministry create/edit modal -->
+<div class="modal-overlay" id="ministry-modal">
+  <div class="modal-box" style="max-width:480px;">
+    <h3 id="ministry-modal-title">New Ministry</h3>
+    <div id="ministry-modal-alert" class="hidden"></div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" type="text" id="ministry-name-input" placeholder="e.g. Choir">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" type="text" id="ministry-desc-input" placeholder="Optional">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Available Roles</label>
+      <div id="ministry-roles-chips" style="display:flex;flex-wrap:wrap;gap:var(--space-xs);min-height:32px;margin-bottom:var(--space-xs);padding:var(--space-xs) 0;"></div>
+      <div style="display:flex;gap:var(--space-xs);align-items:center;">
+        <input class="form-input" type="text" id="ministry-new-role-input" placeholder="Role name…" style="flex:1;">
+        <input class="form-input" type="number" id="ministry-new-role-max" placeholder="Max" min="1" style="width:72px;" title="Maximum number of members who can hold this role. Leave blank for unlimited.">
+        <button type="button" class="btn btn-outline btn-sm" onclick="addMinistryRoleChip()">Add</button>
+      </div>
+      <p class="form-hint" style="margin-top:var(--space-xs)">Set Max to limit occupancy (e.g. ChairPerson → 1). Leave blank for unlimited. "Member" is always available as the default.</p>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:var(--space-sm);">
+      <input type="checkbox" id="ministry-active-input" checked>
+      <label for="ministry-active-input" class="form-label" style="margin:0;">Active</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeMinistryModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="ministry-save-btn" onclick="saveMinistry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ministry detail modal -->
+<div class="modal-overlay" id="ministry-detail-modal">
+  <div class="modal-box" style="max-width:520px;">
+    <h3 id="ministry-detail-title">Ministry Members</h3>
+
+    <!-- Add member form — top -->
+    <div style="margin-bottom:var(--space-lg);">
+      <p class="form-label" style="margin-bottom:var(--space-sm)">Add member</p>
+      <div class="member-search-wrap" id="ministry-search-wrap">
+        <input class="form-input" type="text" id="ministry-member-search"
+               placeholder="Search by name…" autocomplete="off">
+        <div id="ministry-member-results" class="member-search-dropdown hidden"></div>
+      </div>
+      <div id="ministry-selected-member" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;border:1.5px solid var(--color-primary-light);border-radius:var(--radius-md);background:var(--color-bg);margin-top:var(--space-xs);">
+        <span id="ministry-selected-name" style="font-weight:600;font-size:var(--font-size-sm)"></span>
+        <button type="button" onclick="clearMinistrySelection()" style="background:none;border:none;cursor:pointer;color:var(--color-text-muted);font-size:1rem;line-height:1;">×</button>
+      </div>
+      <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-sm);">
+        <select class="form-select" id="ministry-assign-role" style="flex:1;">
+          <option value="Member">Member (default)</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="ministry-add-btn" onclick="addSelectedMinistryMember()" disabled>Add</button>
+      </div>
+    </div>
+
+    <!-- Current members list — below -->
+    <div style="border-top:1px solid var(--color-border);padding-top:var(--space-md);">
+      <p class="form-label" style="margin-bottom:var(--space-sm)">Current members</p>
+      <div id="ministry-detail-members" style="max-height:260px;overflow-y:auto;"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeMinistryDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Content create/edit modal (admin) -->
+<div class="modal-overlay" id="content-modal">
+  <div class="modal-box" style="max-width:640px;">
+    <h3 id="content-modal-title">New Post</h3>
+    <div id="content-modal-alert" class="hidden"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);">
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="content-type-input">
+          <option value="NEWS">News</option>
+          <option value="ANNOUNCEMENT">Announcement</option>
+          <option value="EVENT">Event</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category <span style="font-weight:400;font-size:0.8em;">(optional)</span></label>
+        <input class="form-input" type="text" id="content-category-input" list="category-suggestions" placeholder="e.g. Youth">
+        <datalist id="category-suggestions">
+          <option value="General">
+          <option value="Youth">
+          <option value="Worship">
+          <option value="Missions">
+          <option value="Discipleship">
+          <option value="Community">
+        </datalist>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-input" type="text" id="content-title-input" placeholder="Post title…">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Body</label>
+      <div class="rich-editor-toolbar">
+        <button type="button" class="rte-btn" data-cmd="bold" title="Bold"><strong>B</strong></button>
+        <button type="button" class="rte-btn" data-cmd="italic" title="Italic"><em>I</em></button>
+        <button type="button" class="rte-btn" data-cmd="insertUnorderedList" title="Bullet list">• List</button>
+        <button type="button" class="rte-btn" data-cmd="insertOrderedList" title="Numbered list">1. List</button>
+        <button type="button" class="rte-btn" id="rte-link-btn" title="Insert link">Link</button>
+      </div>
+      <div class="rte-link-row hidden" id="rte-link-row">
+        <input type="url" class="form-input form-input-sm" id="rte-link-input" placeholder="https://">
+        <button type="button" class="btn btn-sm btn-primary" id="rte-link-confirm">Insert</button>
+        <button type="button" class="btn btn-sm btn-outline" id="rte-link-cancel">Cancel</button>
+      </div>
+      <div class="rich-editor" id="content-body-editor" contenteditable="true"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Image</label>
+      <div style="display:flex;gap:var(--space-sm);align-items:center;flex-wrap:wrap;">
+        <input class="form-input" type="url" id="content-imageurl-input" placeholder="https://… or upload below" style="flex:1;min-width:200px;">
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;white-space:nowrap;">
+          Upload Image
+          <input type="file" id="content-image-upload" accept="image/*" style="display:none;" onchange="uploadContentImage()">
+        </label>
+      </div>
+      <p id="content-upload-status" class="form-hint" style="margin-top:var(--space-xs)"></p>
+    </div>
+
+    <!-- Event-specific fields (shown when type = EVENT) -->
+    <div id="event-fields" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);">
+        <div class="form-group">
+          <label class="form-label">Event Start</label>
+          <input class="form-input" type="datetime-local" id="content-eventdate-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event End <span style="font-weight:400;font-size:0.8em;">(optional)</span></label>
+          <input class="form-input" type="datetime-local" id="content-eventenddate-input">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location <span style="font-weight:400;font-size:0.8em;">(optional)</span></label>
+        <input class="form-input" type="text" id="content-location-input" placeholder="e.g. AIC Ruiru Main Hall">
+      </div>
+      <div style="display:flex;align-items:center;gap:var(--space-md);">
+        <div class="form-group" style="flex:1;margin-bottom:0;">
+          <label class="form-label">Max Attendees <span style="font-weight:400;font-size:0.8em;">(optional)</span></label>
+          <input class="form-input" type="number" min="1" id="content-maxattendees-input" placeholder="Unlimited">
+        </div>
+        <div class="form-group" style="margin-bottom:0;display:flex;align-items:center;gap:var(--space-xs);padding-top:var(--space-lg);">
+          <input type="checkbox" id="content-regopen-input">
+          <label for="content-regopen-input" class="form-label" style="margin:0;">Open Registration</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-outline btn-sm" id="content-publish-btn" onclick="publishCurrentContent()" style="display:none;">Publish</button>
+      <div style="display:flex;gap:var(--space-md);">
+        <button class="btn btn-outline btn-sm" onclick="closeContentModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="content-save-btn" onclick="saveContent()">Save Draft</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- News/content detail modal (member view) -->
+<div class="modal-overlay" id="news-detail-modal">
+  <div class="modal-box" style="max-width:680px;">
+    <div id="news-detail-content" style="min-height:200px;">
+      <p class="text-muted">Loading…</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeNewsDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Attendees modal (admin) -->
+<div class="modal-overlay" id="attendees-modal">
+  <div class="modal-box" style="max-width:680px;">
+    <div class="modal-header">
+      <h2 id="attendees-modal-title">Attendees</h2>
+      <button class="modal-close" onclick="closeAttendeesModal()" aria-label="Close">&times;</button>
+    </div>
+    <div id="attendees-list" style="min-height:120px;">
+      <p class="text-muted">Loading…</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeAttendeesModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Record / Edit giving modal -->
+<div class="modal-overlay" id="giving-modal">
+  <div class="modal-box" style="max-width:540px;">
+    <h3 id="giving-modal-title">Record Giving</h3>
+    <div id="giving-modal-alert" class="hidden"></div>
+
+    <!-- Member picker -->
+    <div class="form-group" id="giving-member-group">
+      <label class="form-label">Member <span style="font-weight:400;font-size:0.8em;">(optional)</span></label>
+      <div class="member-search-wrap">
+        <input class="form-input" type="text" id="giving-member-search" placeholder="Search by name…" autocomplete="off">
+        <div id="giving-member-results" class="member-search-dropdown hidden"></div>
+      </div>
+      <div id="giving-member-selected" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;border:1.5px solid var(--color-primary-light);border-radius:var(--radius-md);background:var(--color-bg);margin-top:var(--space-xs);">
+        <span id="giving-member-selected-name" style="font-weight:600;font-size:var(--font-size-sm)"></span>
+        <button type="button" onclick="clearGivingMember()" style="background:none;border:none;cursor:pointer;color:var(--color-text-muted);font-size:1rem;line-height:1;">×</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:var(--space-xs);margin-top:var(--space-xs);">
+        <input type="checkbox" id="giving-anon-check">
+        <label for="giving-anon-check" style="font-size:var(--font-size-sm);cursor:pointer;">Record as anonymous (name hidden from non-super-admin)</label>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);">
+      <div class="form-group">
+        <label class="form-label">Project</label>
+        <select class="form-select" id="giving-project-input"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (KES)</label>
+        <input class="form-input" type="number" min="1" step="0.01" id="giving-amount-input" placeholder="0.00">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm);">
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select class="form-select" id="giving-method-input">
+          <option value="CASH">Cash</option>
+          <option value="MPESA">M-Pesa</option>
+          <option value="BANK_TRANSFER">Bank Transfer</option>
+          <option value="CARD">Card</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date Given</label>
+        <input class="form-input" type="datetime-local" id="giving-date-input">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Reference <span style="font-weight:400;font-size:0.8em;">(e.g. M-Pesa code)</span></label>
+      <input class="form-input" type="text" id="giving-reference-input" placeholder="Optional">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note <span style="font-weight:400;font-size:0.8em;">(optional)</span></label>
+      <input class="form-input" type="text" id="giving-note-input" placeholder="Optional">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeGivingModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="giving-save-btn" onclick="saveGiving()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project create / edit modal -->
+<div class="modal-overlay" id="project-modal">
+  <div class="modal-box" style="max-width:440px;">
+    <h3 id="project-modal-title">New Project</h3>
+    <div id="project-modal-alert" class="hidden"></div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" type="text" id="project-name-input" placeholder="e.g. Building Fund">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description <span style="font-weight:400;font-size:0.8em;">(optional)</span></label>
+      <input class="form-input" type="text" id="project-desc-input" placeholder="Short description">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Target Amount (KES) <span style="font-weight:400;font-size:0.8em;">(optional)</span></label>
+      <input class="form-input" type="number" min="1" step="0.01" id="project-target-input" placeholder="Leave blank for none">
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:var(--space-sm);">
+      <input type="checkbox" id="project-active-input" checked>
+      <label for="project-active-input" class="form-label" style="margin:0;">Active</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeProjectModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="project-save-btn" onclick="saveProject()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Correction review modal (admin) -->
+<div class="modal-overlay" id="correction-review-modal">
+  <div class="modal-box" style="max-width:520px;">
+    <h3>Review Correction Request</h3>
+    <div id="correction-review-alert" class="hidden"></div>
+    <div id="correction-review-body" style="min-height:120px;"><p class="text-muted">Loading…</p></div>
+    <div class="form-group" style="margin-top:var(--space-md);">
+      <label class="form-label">Rejection reason <span style="font-weight:400;font-size:0.8em;">(optional — shown in notification)</span></label>
+      <input class="form-input" type="text" id="correction-reject-reason" placeholder="Leave blank for no reason">
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-outline btn-sm" onclick="closeCorrectionReviewModal()">Cancel</button>
+      <div style="display:flex;gap:var(--space-md);">
+        <button class="btn btn-sm" id="correction-reject-btn" style="border:1px solid var(--color-danger,#dc2626);color:var(--color-danger,#dc2626);background:none;" onclick="resolveCorrection('reject')">Reject</button>
+        <button class="btn btn-primary btn-sm" id="correction-approve-btn" onclick="resolveCorrection('approve')">Approve</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Correction request modal (member submitting) -->
+<div class="modal-overlay" id="correction-request-modal">
+  <div class="modal-box" style="max-width:440px;">
+    <h3>Request Correction</h3>
+    <div id="correction-request-alert" class="hidden"></div>
+    <p class="text-muted" style="font-size:var(--font-size-sm);margin-bottom:var(--space-md);">Describe what you'd like corrected. The treasurer will review and apply the change.</p>
+    <div id="correction-giving-summary" style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-md);font-size:var(--font-size-sm);"></div>
+    <div class="form-group">
+      <label class="form-label">Reason / What to change</label>
+      <input class="form-input" type="text" id="correction-reason-input" placeholder="e.g. Wrong amount recorded">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Correct amount (KES) <span style="font-weight:400;font-size:0.8em;">(leave blank if unchanged)</span></label>
+      <input class="form-input" type="number" min="1" step="0.01" id="correction-amount-input" placeholder="Optional">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Correct reference <span style="font-weight:400;font-size:0.8em;">(leave blank if unchanged)</span></label>
+      <input class="form-input" type="text" id="correction-reference-input" placeholder="Optional">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeCorrectionRequestModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="correction-request-save-btn" onclick="submitCorrectionRequest()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="../assets/js/pages/dashboard.js"></script>
+</body>
+</html>

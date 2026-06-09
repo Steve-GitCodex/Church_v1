@@ -1,0 +1,390 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  PENDING
+  MEMBER
+  STAFF
+  ADMIN
+  SUPER_ADMIN
+  LEGEND
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+  TRANSFERRED
+  DECEASED
+}
+
+enum ContentType {
+  NEWS
+  ANNOUNCEMENT
+  EVENT
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PaymentMethod {
+  CASH
+  MPESA
+  BANK_TRANSFER
+  CARD
+  OTHER
+}
+
+enum GivingRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProfileUpdateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OtpPurpose {
+  REGISTRATION
+  LOGIN
+  PASSWORD_RESET
+}
+
+enum InviteType {
+  INDIVIDUAL
+  MASS
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+}
+
+// ─── User & Auth ──────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  phone        String?  @unique
+  passwordHash String
+  role         Role     @default(PENDING)
+  // Granular permissions for STAFF role (JSON object of permission flags)
+  permissions   Json?
+  isActive      Boolean   @default(true)
+  otpVerifiedAt DateTime? // null = registration OTP not yet completed
+  inviteToken   String?   // token from InviteLink used during registration
+  newsSeenAt    DateTime? // last time user opened the News dashboard tab
+  eventsSeenAt  DateTime? // last time user opened the Events dashboard tab
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile              MemberProfile?
+  otpCodes             OtpCode[]
+  refreshTokens        RefreshToken[]
+  notifications        Notification[]
+  eventRegistrations   EventRegistration[]
+  contentReads         ContentRead[]
+  givingUpdateRequests GivingUpdateRequest[]
+  profileUpdateRequests ProfileUpdateRequest[] @relation("requester")
+  handledUpdateRequests ProfileUpdateRequest[] @relation("handler")
+  handledGivingRequests GivingUpdateRequest[]  @relation("handler")
+  createdContent        Content[]
+  recordedGivings       Giving[]               @relation("recorder")
+  voidedGivings         Giving[]               @relation("voider")
+  invitesCreated        InviteLink[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model OtpCode {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  purpose   OtpPurpose
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime   @default(now())
+
+  @@map("otp_codes")
+}
+
+// ─── Member Profile ───────────────────────────────────────────────────────────
+
+model MemberProfile {
+  id               String            @id @default(cuid())
+  userId           String            @unique
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName        String
+  lastName         String
+  middleName       String?
+  dateOfBirth      DateTime?
+  phone            String?
+  address          String?
+  dateJoined       DateTime?
+  baptismDate      DateTime?
+  membershipStatus MembershipStatus  @default(ACTIVE)
+  photoUrl         String?
+  householdId      String?
+  household        Household?        @relation(fields: [householdId], references: [id])
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  statusHistory  MembershipStatusHistory[]
+  ministries     MemberMinistry[]
+  givings        Giving[]
+
+  @@map("member_profiles")
+}
+
+model MembershipStatusHistory {
+  id        String           @id @default(cuid())
+  profileId String
+  profile   MemberProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  status    MembershipStatus
+  note      String?
+  changedAt DateTime         @default(now())
+
+  @@map("membership_status_history")
+}
+
+// ─── Household ────────────────────────────────────────────────────────────────
+
+model Household {
+  id        String          @id @default(cuid())
+  name      String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  members MemberProfile[]
+
+  @@map("households")
+}
+
+// ─── Ministries / Cell Groups ─────────────────────────────────────────────────
+
+model Ministry {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  roles       Json     @default(dbgenerated("'[]'::jsonb"))
+  createdAt   DateTime @default(now())
+
+  members MemberMinistry[]
+
+  @@map("ministries")
+}
+
+model MemberMinistry {
+  id         String        @id @default(cuid())
+  profileId  String
+  profile    MemberProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  ministryId String
+  ministry   Ministry      @relation(fields: [ministryId], references: [id], onDelete: Cascade)
+  role       String?       // e.g. "Leader", "Member"
+  joinedAt   DateTime      @default(now())
+  leftAt     DateTime?
+
+  @@unique([profileId, ministryId])
+  @@map("member_ministries")
+}
+
+// ─── Content (News / Announcements / Events) ──────────────────────────────────
+
+model Content {
+  id               String        @id @default(cuid())
+  type             ContentType
+  status           ContentStatus @default(DRAFT)
+  title            String
+  body             String
+  imageUrl         String?
+  category         String?
+  authorId         String
+  author           User          @relation(fields: [authorId], references: [id])
+  // Event-specific fields
+  eventDate        DateTime?
+  eventEndDate     DateTime?
+  location         String?
+  maxAttendees     Int?
+  registrationOpen Boolean       @default(false)
+  isFeatured       Boolean       @default(false)
+  publishedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  registrations EventRegistration[]
+  reads         ContentRead[]
+
+  @@map("content")
+}
+
+model EventRegistration {
+  id        String   @id @default(cuid())
+  contentId String
+  content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([contentId, userId])
+  @@map("event_registrations")
+}
+
+model ContentRead {
+  id        String   @id @default(cuid())
+  contentId String
+  content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt    DateTime @default(now())
+
+  @@unique([contentId, userId])
+  @@map("content_reads")
+}
+
+// ─── Givings ──────────────────────────────────────────────────────────────────
+
+model GivingProject {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  targetAmount Decimal? @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+
+  givings Giving[]
+
+  @@map("giving_projects")
+}
+
+model Giving {
+  id            String         @id @default(cuid())
+  memberId      String?
+  member        MemberProfile? @relation(fields: [memberId], references: [id])
+  isAnonymous   Boolean        @default(false)
+  projectId     String
+  project       GivingProject  @relation(fields: [projectId], references: [id])
+  amount        Decimal        @db.Decimal(12, 2)
+  paymentMethod PaymentMethod  @default(CASH)
+  reference     String?
+  note          String?
+  givenAt       DateTime       @default(now())
+  recordedById  String
+  recordedBy    User           @relation("recorder", fields: [recordedById], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  voided        Boolean        @default(false)
+  voidedAt      DateTime?
+  voidedById    String?
+  voidedBy      User?          @relation("voider", fields: [voidedById], references: [id])
+
+  updateRequests GivingUpdateRequest[]
+
+  @@map("givings")
+}
+
+model GivingUpdateRequest {
+  id          String              @id @default(cuid())
+  givingId    String
+  giving      Giving              @relation(fields: [givingId], references: [id], onDelete: Cascade)
+  requestedById String
+  requestedBy   User              @relation(fields: [requestedById], references: [id])
+  reason        String
+  proposedData  Json              // JSON snapshot of what member wants changed
+  status        GivingRequestStatus @default(PENDING)
+  handledById   String?
+  handledBy     User?             @relation("handler", fields: [handledById], references: [id])
+  handledAt     DateTime?
+  createdAt     DateTime          @default(now())
+
+  @@map("giving_update_requests")
+}
+
+// ─── Profile Update Requests ──────────────────────────────────────────────────
+
+model ProfileUpdateRequest {
+  id            String              @id @default(cuid())
+  requestedById String
+  requestedBy   User                @relation("requester", fields: [requestedById], references: [id])
+  field         String              // e.g. "membershipStatus", "baptismDate"
+  currentValue  String?
+  proposedValue String
+  reason        String?
+  status        ProfileUpdateStatus @default(PENDING)
+  handledById   String?
+  handledBy     User?               @relation("handler", fields: [handledById], references: [id])
+  handledAt     DateTime?
+  createdAt     DateTime            @default(now())
+
+  @@map("profile_update_requests")
+}
+
+// ─── Invite Links ─────────────────────────────────────────────────────────────
+
+model InviteLink {
+  id          String     @id @default(cuid())
+  token       String     @unique @default(cuid())
+  type        InviteType
+  createdById String
+  createdBy   User       @relation(fields: [createdById], references: [id])
+  // For individual invites
+  targetEmail String?
+  targetPhone String?
+  usedAt      DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime   @default(now())
+
+  @@map("invite_links")
+}
+
+// ─── Site Settings ───────────────────────────────────────────────────────────
+
+model SiteSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  channel   NotificationChannel @default(IN_APP)
+  readAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  @@map("notifications")
+}

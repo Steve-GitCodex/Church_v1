@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIC Ruiru</title>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/home.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="nav-brand" href="/"><span>AIC</span> Ruiru</a>
+      <div class="nav-links">
+        <a href="pages/about.html">About</a>
+        <a href="pages/events.html">Events</a>
+        <a href="pages/news.html">News</a>
+        <a href="pages/login.html" class="btn btn-accent btn-sm">Member Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="container hero-inner">
+      <p class="hero-eyebrow">Africa Inland Church · Ruiru</p>
+      <h1>Welcome to <span>AIC Ruiru</span></h1>
+      <p class="hero-lead">A community of faith, hope, and love. Join us as we worship, grow, and serve together.</p>
+      <div class="hero-actions">
+        <a href="pages/register.html" class="btn btn-accent">Join Us</a>
+        <a href="pages/about.html" class="btn btn-outline btn-outline-white">Learn More</a>
+      </div>
+    </div>
+    <div class="hero-wave" aria-hidden="true">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,40 C360,90 1080,-10 1440,40 L1440,80 L0,80 Z"></path></svg>
+    </div>
+  </section>
+
+  <section class="section" id="about">
+    <div class="container">
+      <h2 class="section-title">About Us</h2>
+      <div class="about-panel text-center about-card">
+        <p class="about-text" id="about-text">
+          AIC Ruiru is a vibrant, growing church in Ruiru, Kenya — part of the Africa Inland Church family.
+          We are committed to preaching the Gospel, discipling believers, and serving our community.
+        </p>
+      </div>
+      <div class="service-times">
+        <div class="service-card">
+          <div class="service-icon">⛪</div>
+          <div class="service-time-day">Sunday</div>
+          <div class="text-muted">Service · 9:00 AM</div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">📖</div>
+          <div class="service-time-day">Wednesday</div>
+          <div class="text-muted">Mid-week · 6:00 PM</div>
+        </div>
+        <div class="service-card">
+          <div class="service-icon">🙏</div>
+          <div class="service-time-day">Friday</div>
+          <div class="text-muted">Prayer · 6:00 PM</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">Latest News &amp; Events</h2>
+    </div>
+    <div class="ticker-outer" id="ticker-outer">
+      <div class="ticker-track" id="content-ticker">
+        <span class="ticker-loading">Loading…</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <h3 class="footer-brand"><span>AIC</span> Ruiru</h3>
+        <p>A community of faith, hope, and love in Ruiru, Kenya — part of the Africa Inland Church family.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="pages/about.html">About</a>
+        <a href="pages/events.html">Events</a>
+        <a href="pages/news.html">News</a>
+        <a href="pages/login.html">Member Login</a>
+      </div>
+      <div class="footer-col">
+        <h4>Service Times</h4>
+        <p>Sunday · 9:00 AM</p>
+        <p>Wednesday · 6:00 PM</p>
+        <p>Friday · 6:00 PM</p>
+      </div>
+      <div class="footer-col">
+        <h4>Visit Us</h4>
+        <p>Ruiru, Kenya</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; <span id="year"></span> AIC Ruiru. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <button class="theme-fab" id="theme-fab" title="Toggle theme">☀️</button>
+  <script type="module" src="assets/js/pages/home.js"></script>
+</body>
+</html>

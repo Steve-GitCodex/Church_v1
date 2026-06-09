@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — AIC Ruiru</title>
+  <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/auth.css">
+</head>
+<body class="auth-body">
+  <aside class="auth-brand">
+    <div class="auth-brand-inner">
+      <h1 class="auth-brand-logo"><span>AIC</span> Ruiru</h1>
+      <p class="auth-brand-tagline">Join our church family.</p>
+      <blockquote class="auth-verse">"And they continued steadfastly… in fellowship."<cite>Acts 2:42</cite></blockquote>
+    </div>
+  </aside>
+  <div class="register-wrap">
+    <div class="register-logo">
+      <h1><span>AIC</span> Ruiru</h1>
+      <p>Join Our Church Family</p>
+    </div>
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+    </div>
+
+    <div class="card">
+      <div id="alert" class="hidden"></div>
+      <div id="invite-banner" class="hidden" style="background:var(--color-primary);color:#fff;border-radius:var(--radius-md);padding:var(--space-sm) var(--space-md);margin-bottom:var(--space-lg);font-size:var(--font-size-sm);text-align:center;">
+        You've been personally invited — your account will be approved automatically.
+      </div>
+
+      <!-- Step 1: Details -->
+      <div class="step active" id="step-1">
+        <h2 style="margin-bottom:var(--space-lg);font-size:var(--font-size-xl)">Your Details</h2>
+        <form id="register-form">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);">
+            <div class="form-group">
+              <label class="form-label" for="firstName">First Name</label>
+              <input class="form-input" type="text" id="firstName" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lastName">Last Name</label>
+              <input class="form-input" type="text" id="lastName" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-input" type="email" id="email" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone</label>
+            <input class="form-input" type="tel" id="phone" placeholder="+254 7xx xxx xxx" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-input" type="password" id="password" placeholder="Minimum 8 characters" required autocomplete="new-password">
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="register-btn">Continue</button>
+        </form>
+      </div>
+
+      <!-- Step 2: OTP -->
+      <div class="step" id="step-2">
+        <div class="otp-email-notice">
+          <div class="otp-email-icon">✉️</div>
+          <h2>Check your email</h2>
+          <p>We sent a 6-digit code to</p>
+          <strong class="otp-dest-email" id="otp-dest"></strong>
+          <p class="text-muted otp-spam-hint">Can't find it? Check your spam folder.</p>
+        </div>
+
+        <form id="otp-form">
+          <div class="form-group">
+            <label class="form-label" for="otp">Verification Code</label>
+            <input class="form-input otp-input" type="text" id="otp" maxlength="6"
+              pattern="[0-9]{6}" placeholder="000000" required inputmode="numeric" autocomplete="one-time-code">
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="otp-btn">Verify</button>
+        </form>
+
+        <div class="resend-row" id="resend-row" style="display:none;">
+          <span id="resend-waiting">Resend in <strong id="countdown">60</strong>s</span>
+          <span id="resend-ready" class="hidden">
+            Didn't receive it?
+            <button class="resend-link" id="resend-btn">Resend code</button>
+          </span>
+        </div>
+      </div>
+
+      <!-- Step 3: Done -->
+      <div class="step" id="step-3">
+        <div style="text-align:center;padding:var(--space-lg) 0;">
+          <div id="step-3-icon" style="font-size:3rem;">🙏</div>
+          <h2 style="margin:var(--space-md) 0 var(--space-sm);">You're verified!</h2>
+          <p id="step-3-message" class="text-muted">
+            Your registration is complete. The church administration will review and approve your membership.
+            You'll be notified once approved.
+          </p>
+          <a href="login.html" class="btn btn-primary mt-lg">Go to Login</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center mt-md" style="font-size:var(--font-size-sm)">
+      Already registered? <a href="login.html">Log in</a>
+    </p>
+  </div>
+
+  <a class="home-fab" href="../index.html" title="Church website">🏠</a>
+  <button class="theme-fab" id="theme-fab" title="Toggle theme">☀️</button>
+  <script type="module" src="../assets/js/pages/register.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import request from 'supertest'
+import app from '../app.js'
+import prisma from '../config/db.js'
+import { createTestUser, tokenFor, cleanup } from './helpers.js'
+
+let adminToken, memberToken
+let adminEmail, memberEmail
+let _savedAbout  // original row value (if any) — restored in afterAll
+
+beforeAll(async () => {
+  // Preserve any live 'about' data so tests don't wipe it
+  const existing = await prisma.siteSetting.findUnique({ where: { key: 'about' } })
+  _savedAbout = existing?.value ?? null
+  await prisma.siteSetting.deleteMany({ where: { key: 'about' } })
+
+  const admin  = await createTestUser({ role: 'ADMIN' })
+  const member = await createTestUser({ role: 'MEMBER' })
+  adminEmail  = admin.email
+  memberEmail = member.email
+  adminToken  = (await tokenFor(admin)).accessToken
+  memberToken = (await tokenFor(member)).accessToken
+})
+
+afterAll(async () => {
+  // Remove test-written row, then restore original if there was one
+  await prisma.siteSetting.deleteMany({ where: { key: 'about' } })
+  if (_savedAbout !== null) {
+    await prisma.siteSetting.create({ data: { key: 'about', value: _savedAbout } })
+  }
+  await cleanup(adminEmail, memberEmail)
+})
+
+describe('GET /api/site/about', () => {
+  it('returns defaults when nothing is stored', async () => {
+    const res = await request(app).get('/api/site/about').expect(200)
+    expect(res.body).toHaveProperty('hero')
+    expect(res.body).toHaveProperty('mission')
+    expect(res.body).toHaveProperty('serviceTimes')
+    expect(Array.isArray(res.body.serviceTimes)).toBe(true)
+  })
+})
+
+describe('PUT /api/site/about', () => {
+  const payload = {
+    hero: { heading: 'Test Heading', subheading: 'Test sub' },
+    mission: 'Test mission',
+    vision: 'Test vision',
+    story: 'Test story',
+    beliefs: ['Belief one', 'Belief two'],
+    leaders: [{ name: 'Pastor Test', role: 'Lead Pastor', imageUrl: '' }],
+    serviceTimes: [{ day: 'Sunday', time: '10:00 AM', label: 'Morning Service' }],
+    location: { address: 'Test Addr', phone: '', email: '', mapEmbed: '' },
+  }
+
+  it('returns 401 without a token', async () => {
+    await request(app).put('/api/site/about').send(payload).expect(401)
+  })
+
+  it('returns 403 for a MEMBER', async () => {
+    await request(app)
+      .put('/api/site/about')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send(payload)
+      .expect(403)
+  })
+
+  it('saves the document as ADMIN and GET returns it', async () => {
+    await request(app)
+      .put('/api/site/about')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(payload)
+      .expect(200)
+
+    const res = await request(app).get('/api/site/about').expect(200)
+    expect(res.body.hero.heading).toBe('Test Heading')
+    expect(res.body.mission).toBe('Test mission')
+    expect(res.body.beliefs).toHaveLength(2)
+    expect(res.body.leaders[0].name).toBe('Pastor Test')
+    expect(res.body.serviceTimes[0].day).toBe('Sunday')
+  })
+
+  it('returns 400 for invalid payload (missing hero heading)', async () => {
+    await request(app)
+      .put('/api/site/about')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ ...payload, hero: { heading: '', subheading: '' } })
+      .expect(400)
+  })
+})
