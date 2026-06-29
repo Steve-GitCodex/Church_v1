@@ -153,8 +153,42 @@ async function request(method, path, body = null, retry = true) {
   return data
 }
 
+// ── Authenticated file download ───────────────────────────────────────────────
+// Fetches a binary response with the bearer token and triggers a browser
+// download. Used for endpoints (e.g. PDF receipts) that can't go through the
+// JSON request() path or a plain link (which wouldn't carry the auth header).
+async function download(path, filename, retry = true) {
+  const headers = {}
+  const token = getAccessToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${BASE_URL}${path}`, { headers })
+
+  if (res.status === 401 && retry) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) return download(path, filename, false)
+    if (!getAccessToken()) window.location.href = '/pages/login.html'
+    return
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw Object.assign(new Error(data.error || 'Download failed'), { status: res.status, data })
+  }
+
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 export const api = {
   get:    (path)        => request('GET',    path),
+  download,
   post:   (path, body)  => request('POST',   path, body),
   put:    (path, body)  => request('PUT',    path, body),
   patch:  (path, body)  => request('PATCH',  path, body),

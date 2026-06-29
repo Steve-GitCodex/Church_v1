@@ -218,7 +218,9 @@ export async function approveMember(req, res, next) {
     cacheInvalidate('members:pending', 'members:slim')
 
     if (user.email) await sendApprovalEmail(user.email, user.profile.firstName)
-    createNotification(user.id, 'Account Approved', 'Welcome! Your AIC Ruiru membership has been approved. You can now access all member features.').catch(() => {})
+    // Awaited so a 200 response guarantees the notification is persisted; the
+    // catch keeps a notification failure from failing the approval itself.
+    await createNotification(user.id, 'Account Approved', 'Welcome! Your AIC Ruiru membership has been approved. You can now access all member features.').catch(() => {})
 
     res.json({ message: 'Member approved' })
   } catch (err) {

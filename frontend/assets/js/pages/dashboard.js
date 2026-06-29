@@ -191,6 +191,7 @@ function onPageLoad(page) {
   if (page === 'givings-admin')    loadGivingsLedger(1)
   if (page === 'giving-projects')  loadGivingProjects()
   if (page === 'giving-requests')  loadCorrectionRequests()
+  if (page === 'giving-reports')   loadGivingReports()
   if (page === 'system')           loadSystemSettings()
 }
 
@@ -2507,6 +2508,134 @@ function paymentLabel(method) {
   return { CASH: 'Cash', MPESA: 'M-Pesa', BANK_TRANSFER: 'Bank Transfer', CARD: 'Card', OTHER: 'Other' }[method] || method
 }
 
+// ── Giving Reports (admin/treasurer) ──────────────────────────
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+let _reportsInit = false
+
+async function loadGivingReports() {
+  if (!_reportsInit) {
+    _reportsInit = true
+
+    // Year picker — current year back to 2020
+    const yearSel = document.getElementById('report-year')
+    const thisYear = new Date().getFullYear()
+    yearSel.innerHTML = ''
+    for (let y = thisYear; y >= 2020; y--) {
+      yearSel.innerHTML += `<option value="${y}">${y}</option>`
+    }
+
+    // Default date range — start of this year to today
+    document.getElementById('report-from').value = `${thisYear}-01-01`
+    document.getElementById('report-to').value = new Date().toISOString().slice(0, 10)
+
+    // Project filter
+    try {
+      const projects = await api.get('/givings/projects')
+      document.getElementById('report-project').innerHTML = '<option value="">All projects</option>' +
+        projects.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('')
+    } catch { /* leave default */ }
+
+    yearSel.addEventListener('change', loadSummaryReport)
+    document.getElementById('report-project').addEventListener('change', loadRangeReport)
+    let timer = null
+    ;['report-from', 'report-to'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        clearTimeout(timer)
+        timer = setTimeout(loadRangeReport, 400)
+      })
+    })
+  }
+
+  loadSummaryReport()
+  loadRangeReport()
+}
+
+async function loadSummaryReport() {
+  const cardsEl  = document.getElementById('summary-cards')
+  const tablesEl = document.getElementById('summary-tables')
+  tablesEl.innerHTML = skeletonRows()
+  try {
+    const year = document.getElementById('report-year').value
+    const res = await api.get(`/givings/summary?year=${year}`)
+
+    cardsEl.innerHTML = `
+      <div class="giving-stat-card">
+        <div class="giving-stat-value">${fmtKES(res.total)}</div>
+        <div class="giving-stat-label">Total — ${res.year} (${res.count})</div>
+      </div>`
+
+    const projectRows = res.byProject.length
+      ? res.byProject.map(b => `<tr><td>${escHtml(b.projectName)}</td><td>${fmtKES(b.total)}</td><td>${b.count}</td></tr>`).join('')
+      : '<tr><td colspan="3" class="text-muted">No givings recorded this year.</td></tr>'
+
+    const monthRows = res.byMonth
+      .map((m, i) => ({ ...m, label: MONTH_NAMES[i] }))
+      .filter(m => Number(m.total) > 0)
+    const monthsHtml = monthRows.length
+      ? monthRows.map(m => `<tr><td>${m.label}</td><td>${fmtKES(m.total)}</td><td>${m.count}</td></tr>`).join('')
+      : '<tr><td colspan="3" class="text-muted">No givings recorded this year.</td></tr>'
+
+    tablesEl.innerHTML = `
+      <table>
+        <thead><tr><th>By Project</th><th>Amount</th><th>Count</th></tr></thead>
+        <tbody>${projectRows}</tbody>
+      </table>
+      <table style="margin-top:var(--space-lg)">
+        <thead><tr><th>By Month</th><th>Amount</th><th>Count</th></tr></thead>
+        <tbody>${monthsHtml}</tbody>
+      </table>`
+  } catch {
+    tablesEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load summary.</p>'
+  }
+}
+
+async function loadRangeReport() {
+  const totalEl  = document.getElementById('report-total')
+  const tablesEl = document.getElementById('report-tables')
+  tablesEl.innerHTML = skeletonRows()
+  try {
+    const params = new URLSearchParams()
+    const from = document.getElementById('report-from').value
+    const to   = document.getElementById('report-to').value
+    const projectId = document.getElementById('report-project').value
+    if (from)      params.append('from', new Date(from).toISOString())
+    if (to)        params.append('to', new Date(to + 'T23:59:59').toISOString())
+    if (projectId) params.append('projectId', projectId)
+
+    const res = await api.get(`/givings/report?${params.toString()}`)
+    totalEl.textContent = `Total: ${fmtKES(res.total)} across ${res.count} giving${res.count === 1 ? '' : 's'}`
+
+    const projectRows = res.byProject.length
+      ? res.byProject.map(b => `<tr><td>${escHtml(b.projectName)}</td><td>${fmtKES(b.total)}</td><td>${b.count}</td></tr>`).join('')
+      : '<tr><td colspan="3" class="text-muted">No givings in this range.</td></tr>'
+
+    const methodRows = res.byMethod.length
+      ? res.byMethod.map(b => `<tr><td>${paymentLabel(b.paymentMethod)}</td><td>${fmtKES(b.total)}</td><td>${b.count}</td></tr>`).join('')
+      : '<tr><td colspan="3" class="text-muted">No givings in this range.</td></tr>'
+
+    tablesEl.innerHTML = `
+      <table>
+        <thead><tr><th>By Project</th><th>Amount</th><th>Count</th></tr></thead>
+        <tbody>${projectRows}</tbody>
+      </table>
+      <table style="margin-top:var(--space-lg)">
+        <thead><tr><th>By Method</th><th>Amount</th><th>Count</th></tr></thead>
+        <tbody>${methodRows}</tbody>
+      </table>`
+  } catch {
+    tablesEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load report.</p>'
+  }
+}
+
+window.downloadReceipt = async (id) => {
+  try {
+    await api.download(`/givings/${id}/receipt`, `receipt-${id.slice(-8)}.pdf`)
+  } catch (err) {
+    toast('Failed to download receipt: ' + (err.message || ''), 'danger')
+  }
+}
+
 // ── My Givings (member view) ──────────────────────────────────
 
 let _correctionGivingId = null
@@ -2546,7 +2675,10 @@ async function loadMyGivings() {
               <td>${new Date(g.givenAt).toLocaleDateString('en-KE')}</td>
               <td>${g.reference ? escHtml(g.reference) : '—'}</td>
               <td>
-                <button class="btn btn-sm btn-outline" onclick="openCorrectionRequestModal('${g.id}',${JSON.stringify(g)})">Request Correction</button>
+                <div class="action-btns">
+                  <button class="btn btn-sm btn-outline" onclick="downloadReceipt('${g.id}')">Receipt</button>
+                  <button class="btn btn-sm btn-outline" onclick="openCorrectionRequestModal('${g.id}',${JSON.stringify(g)})">Request Correction</button>
+                </div>
               </td>
             </tr>
           `).join('')}
@@ -2674,6 +2806,7 @@ async function loadGivingsLedger(page = 1) {
                 <td>${g.voided ? '<span class="badge badge-inactive">Voided</span>' : '<span class="badge badge-active">Active</span>'}</td>
                 <td>
                   <div class="action-btns">
+                    ${!g.voided ? `<button class="btn btn-sm btn-outline" onclick="downloadReceipt('${g.id}')">Receipt</button>` : ''}
                     ${!g.voided ? `<button class="btn btn-sm btn-outline" onclick="openGivingModal('${g.id}')">Edit</button>` : ''}
                     ${!g.voided ? `<button class="btn btn-sm btn-outline" style="color:var(--color-danger)" onclick="voidGivingItem('${g.id}')">Void</button>` : ''}
                   </div>

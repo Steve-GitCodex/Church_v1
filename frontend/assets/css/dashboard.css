@@ -423,7 +423,8 @@ tr:last-child td { border-bottom: none; }
   color: var(--color-text-muted);
   margin-top: 0.2rem;
 }
-#my-givings-summary {
+#my-givings-summary,
+.giving-stats-grid {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
