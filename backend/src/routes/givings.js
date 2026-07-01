@@ -8,6 +8,9 @@ import {
   listMine, requestCorrection,
   listCorrectionRequests, approveCorrection, rejectCorrection,
 } from '../controllers/givings.js'
+import {
+  createPledge, listPledges, listMyPledges, updatePledge, cancelPledge,
+} from '../controllers/pledges.js'
 
 const router = Router()
 
@@ -28,6 +31,13 @@ router.patch('/projects/:id/deactivate',  requirePermission('manageGivings'), de
 // Reports — static paths before /:id
 router.get('/summary',                    requirePermission('manageGivings'), givingSummary)
 router.get('/report',                     requirePermission('manageGivings'), givingReport)
+
+// Pledges — static paths before /:id. Create/mine open to members; ownership enforced in controller.
+router.get('/pledges/mine',        listMyPledges)
+router.post('/pledges',            createPledge)
+router.get('/pledges',             requirePermission('manageGivings'), listPledges)
+router.put('/pledges/:id',         updatePledge)
+router.patch('/pledges/:id/cancel', cancelPledge)
 
 // Correction request queue
 router.get('/requests',                   requirePermission('manageGivings'), listCorrectionRequests)

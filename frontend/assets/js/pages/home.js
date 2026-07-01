@@ -9,12 +9,17 @@ const syncFab = () => { fab.textContent = currentTheme() === 'dark' ? '🌙' : '
 syncFab()
 fab.addEventListener('click', () => { toggleTheme(); syncFab() })
 
-// Show "Go to Dashboard" in navbar when already logged in
+// Show "Go to Dashboard" in navbar + hero when already logged in
 if (localStorage.getItem('accessToken')) {
   const loginBtn = document.querySelector('.nav-links a.btn')
   if (loginBtn) {
     loginBtn.textContent = 'Dashboard'
     loginBtn.href = 'pages/dashboard.html'
+  }
+  const joinBtn = document.getElementById('hero-join-btn')
+  if (joinBtn) {
+    joinBtn.textContent = 'Go to Dashboard'
+    joinBtn.href = 'pages/dashboard.html'
   }
 }
 

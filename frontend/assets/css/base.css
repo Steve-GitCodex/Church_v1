@@ -202,3 +202,12 @@ body { transition: background-color 0.3s ease, color 0.3s ease; }
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ── Responsive form rows (collapse to one column on phones) ── */
+.form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-sm); }
+
+@media (max-width: 640px) {
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .container { padding: 0 var(--space-md); }
+}

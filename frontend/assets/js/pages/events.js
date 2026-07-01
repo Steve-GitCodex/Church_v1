@@ -69,6 +69,9 @@ function cardHtml(item) {
   const rsvpPill = item.registrationOpen
     ? '<span class="content-card-rsvp-pill">RSVP Open</span>'
     : ''
+  const pricePill = item.ticketPrice != null && Number(item.ticketPrice) > 0
+    ? `<span class="content-card-price-pill">KES ${Number(item.ticketPrice).toLocaleString()}</span>`
+    : '<span class="content-card-price-pill free">Free</span>'
   const imgSrc = item.imageUrl || defaultCover(item)
   const imgHtml = `<div class="content-card-img-wrap">
        <img src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy"
@@ -82,6 +85,7 @@ function cardHtml(item) {
         <div class="content-card-meta">
           <span class="content-card-type">Event</span>
           ${rsvpPill}
+          ${pricePill}
         </div>
         <h3 class="content-card-title">${escHtml(item.title)}</h3>
         <div class="content-card-date">${dateStr}</div>
@@ -195,6 +199,7 @@ async function renderDetail(id) {
       <div class="content-detail-meta">
         <span>&#128197; ${dateStr}</span>
         ${item.location ? `<span>&#128205; ${escHtml(item.location)}</span>` : ''}
+        <span>&#127915; ${item.ticketPrice != null && Number(item.ticketPrice) > 0 ? 'KES ' + Number(item.ticketPrice).toLocaleString() : 'Free'}</span>
         ${item.category ? `<span>${escHtml(item.category)}</span>` : ''}
         ${item.author?.name ? `<span>By ${escHtml(item.author.name)}</span>` : ''}
       </div>

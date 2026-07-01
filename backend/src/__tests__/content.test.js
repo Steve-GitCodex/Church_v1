@@ -387,3 +387,65 @@ describe('GET /api/content/manage', () => {
     expect(res.status).toBe(403)
   })
 })
+
+// ─── Paid events (ticketing) ───────────────────────────────────────────────────
+
+describe('Paid events ticketing', () => {
+  let paidEvent
+
+  beforeAll(async () => {
+    paidEvent = await createContent(admin.id, {
+      type: 'EVENT', title: 'Youth Camp', ticketPrice: 500,
+      registrationOpen: true, status: 'PUBLISHED', publishedAt: new Date(),
+    })
+    await api.post(`/api/content/${paidEvent.id}/rsvp`).set('Authorization', `Bearer ${memberToken}`)
+  })
+
+  it('201 — create accepts ticketPrice', async () => {
+    const res = await api.post('/api/content')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ type: 'EVENT', title: 'Priced Event', body: '<p>x</p>', ticketPrice: 250 })
+    expect(res.status).toBe(201)
+  })
+
+  it('GET /:id exposes ticketPrice', async () => {
+    const res = await api.get(`/api/content/${paidEvent.id}`).set('Authorization', `Bearer ${memberToken}`)
+    expect(Number(res.body.ticketPrice)).toBe(500)
+  })
+
+  it('registration starts unpaid', async () => {
+    const res = await api.get(`/api/content/${paidEvent.id}/registrations`).set('Authorization', `Bearer ${adminToken}`)
+    expect(res.status).toBe(200)
+    expect(res.body.summary.paidCount).toBe(0)
+    expect(res.body.registrations[0].paidAt).toBeNull()
+  })
+
+  it('manager marks a registration paid; summary updates', async () => {
+    const pay = await api.post(`/api/content/${paidEvent.id}/registrations/${member.id}/pay`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ amount: 500, method: 'MPESA', reference: 'ABC123' })
+    expect(pay.status).toBe(200)
+    expect(pay.body.paid).toBe(true)
+
+    const res = await api.get(`/api/content/${paidEvent.id}/registrations`).set('Authorization', `Bearer ${adminToken}`)
+    expect(res.body.summary.paidCount).toBe(1)
+    expect(res.body.summary.collected).toBe(500)
+    expect(res.body.registrations[0].paidAt).not.toBeNull()
+    expect(Number(res.body.registrations[0].amountPaid)).toBe(500)
+  })
+
+  it('manager can revert payment (unpay)', async () => {
+    const res = await api.post(`/api/content/${paidEvent.id}/registrations/${member.id}/unpay`)
+      .set('Authorization', `Bearer ${adminToken}`)
+    expect(res.status).toBe(200)
+    const list = await api.get(`/api/content/${paidEvent.id}/registrations`).set('Authorization', `Bearer ${adminToken}`)
+    expect(list.body.summary.paidCount).toBe(0)
+  })
+
+  it('403 — member cannot mark paid', async () => {
+    const res = await api.post(`/api/content/${paidEvent.id}/registrations/${member.id}/pay`)
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ amount: 500, method: 'CASH' })
+    expect(res.status).toBe(403)
+  })
+})

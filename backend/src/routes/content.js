@@ -17,6 +17,8 @@ import {
   rsvp,
   cancelRsvp,
   listRegistrations,
+  markRegistrationPaid,
+  unmarkRegistrationPaid,
 } from '../controllers/content.js'
 
 const router = Router()
@@ -48,5 +50,7 @@ router.post('/:id/read', authenticate, requireMinRole('MEMBER'), markRead)
 router.post('/:id/rsvp',         authenticate, requireMinRole('MEMBER'), rsvp)
 router.delete('/:id/rsvp',       authenticate, requireMinRole('MEMBER'), cancelRsvp)
 router.get('/:id/registrations', authenticate, requireContentPermission, listRegistrations)
+router.post('/:id/registrations/:userId/pay',   authenticate, requireContentPermission, markRegistrationPaid)
+router.post('/:id/registrations/:userId/unpay', authenticate, requireContentPermission, unmarkRegistrationPaid)
 
 export default router

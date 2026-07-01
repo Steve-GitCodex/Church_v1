@@ -328,6 +328,17 @@ footer {
   .footer-grid { grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
   .hero h1 { font-size: var(--font-size-3xl); }
 }
+@media (max-width: 600px) {
+  /* Nav: let the brand keep its row and the links wrap compactly below */
+  .nav-inner { flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); }
+  .nav-links { flex-wrap: wrap; gap: 2px; justify-content: flex-end; }
+  .nav-links a { padding: 0.4rem 0.6rem; font-size: var(--font-size-sm); }
+  .hero h1 { font-size: var(--font-size-2xl); }
+  .hero p { font-size: var(--font-size-base); }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { width: 100%; }
+}
+
 @media (max-width: 460px) {
   .footer-grid { grid-template-columns: 1fr; }
 }

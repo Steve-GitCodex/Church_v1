@@ -132,7 +132,7 @@ async function init() {
         renderGreeting(me.profile?.firstName)
         saveCachedProfile(me)
         // Re-render profile page if it's already open (user navigated before API resolved)
-        if (document.getElementById('page-profile')?.classList.contains('active')) renderProfile()
+        if (document.getElementById('page-account')?.classList.contains('active')) renderProfile()
       }),
       loadDashboardStats(),
       ...(isAtLeast('ADMIN') ? [loadPendingCount(), loadUpdateRequestsCount()] : []),
@@ -164,36 +164,147 @@ document.querySelectorAll('.nav-link[data-page]').forEach(btn => {
     btn.classList.add('active')
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
     document.getElementById(`page-${page}`).classList.add('active')
-    document.getElementById('page-title').textContent = btn.textContent.trim()
+    const label = btn.querySelector('.nav-label')?.textContent.trim() ?? btn.textContent.trim()
+    document.getElementById('page-title').textContent = label
     onPageLoad(page)
   })
 })
 
+// Merged tabbed pages: map page → tab container id and per-tab loaders.
+// Loaders are wrapped in arrows so the (hoisted/later-defined) functions resolve at call time.
+const TAB_CONTAINERS = {
+  account:         'account-tabs',
+  updates:         'updates-tabs',
+  members:         'members-tabs',
+  groups:          'groups-tabs',
+  content:         'content-tabs',
+  'givings-admin': 'givings-tabs',
+}
+const TAB_LOADERS = {
+  account:         { profile: () => renderProfile(),     givings: () => loadMyGivings() },
+  updates:         { news: () => loadNews(1),            events: () => loadEvents(1) },
+  members:         { all: () => loadMembersPage(),       pending: () => loadPending(),       requests: () => loadUpdateRequests() },
+  groups:          { households: () => loadHouseholds(), ministries: () => loadMinistries() },
+  content:         { posts: () => loadContentAdmin(1),   about: () => loadAboutEditor() },
+  'givings-admin': { ledger: () => loadGivingsLedger(1), projects: () => loadGivingProjects(), pledges: () => loadPledgesAdmin(), corrections: () => loadCorrectionRequests(), reports: () => loadGivingReports() },
+}
+
+function activateTabBtn(page, btn) {
+  const container = document.getElementById(TAB_CONTAINERS[page])
+  const tab = btn.dataset.tab
+  container.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  document.getElementById(`page-${page}`)
+    .querySelectorAll(':scope > .tab-panel')
+    .forEach(p => p.classList.toggle('active', p.dataset.tab === tab))
+  TAB_LOADERS[page][tab]?.()
+}
+
+function activateTab(page, tab) {
+  const container = document.getElementById(TAB_CONTAINERS[page])
+  const btn = container?.querySelector(`.seg-btn[data-tab="${tab}"]`)
+  if (btn) activateTabBtn(page, btn)
+}
+
+function loadActiveTab(page) {
+  const container = document.getElementById(TAB_CONTAINERS[page])
+  const active = container?.querySelector('.seg-btn.active') || container?.querySelector('.seg-btn')
+  if (active) activateTabBtn(page, active)
+}
+
+// Wire every tabbed page's seg-control
+Object.entries(TAB_CONTAINERS).forEach(([page, tabsId]) => {
+  document.getElementById(tabsId)?.addEventListener('click', e => {
+    const btn = e.target.closest('.seg-btn')
+    if (btn) activateTabBtn(page, btn)
+  })
+})
+
+// My Account has no rail item — it's opened from the avatar
+function showAccountPage() {
+  document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'))
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById('page-account').classList.add('active')
+  document.getElementById('page-title').textContent = 'My Account'
+  document.getElementById('nav-account-btn')?.classList.add('active')
+}
+
+// Aliases keep existing callers (quick actions, deep links) working after the merge
+const PAGE_ALIASES = {
+  profile:           ['account', 'profile'],
+  givings:           ['account', 'givings'],
+  pending:           ['members', 'pending'],
+  'update-requests': ['members', 'requests'],
+  news:              ['updates', 'news'],
+  events:            ['updates', 'events'],
+  households:        ['groups', 'households'],
+  ministries:        ['groups', 'ministries'],
+  'about-editor':    ['content', 'about'],
+  'giving-projects': ['givings-admin', 'projects'],
+  'giving-requests': ['givings-admin', 'corrections'],
+  'giving-reports':  ['givings-admin', 'reports'],
+}
+
 function goToPage(page) {
-  const btn = document.querySelector(`.nav-link[data-page="${page}"]`)
-  if (btn) btn.click()
+  const alias = PAGE_ALIASES[page]
+  if (alias) {
+    const [parent, tab] = alias
+    if (parent === 'account') showAccountPage()
+    else document.querySelector(`.nav-link[data-page="${parent}"]`)?.click()
+    activateTab(parent, tab)
+    return
+  }
+  document.querySelector(`.nav-link[data-page="${page}"]`)?.click()
 }
 window.goToPage = goToPage
 
 function onPageLoad(page) {
-  if (page === 'profile')         renderProfile()
-  if (page === 'pending')         loadPending()
-  if (page === 'members')         loadMembersPage()
-  if (page === 'update-requests') loadUpdateRequests()
-  if (page === 'invites')         loadInvites()
-  if (page === 'households')      loadHouseholds()
-  if (page === 'ministries')      loadMinistries()
-  if (page === 'news')            loadNews(1)
-  if (page === 'events')          loadEvents(1)
-  if (page === 'content')          loadContentAdmin(1)
-  if (page === 'about-editor')     loadAboutEditor()
-  if (page === 'givings')          loadMyGivings()
-  if (page === 'givings-admin')    loadGivingsLedger(1)
-  if (page === 'giving-projects')  loadGivingProjects()
-  if (page === 'giving-requests')  loadCorrectionRequests()
-  if (page === 'giving-reports')   loadGivingReports()
-  if (page === 'system')           loadSystemSettings()
+  if (TAB_CONTAINERS[page])  return loadActiveTab(page)
+  if (page === 'invites')    return loadInvites()
+  if (page === 'system')     return loadSystemSettings()
 }
+
+// Avatar (utility panel identity) opens the My Account page
+const avatarEl = document.getElementById('user-avatar')
+if (avatarEl) {
+  avatarEl.style.cursor = 'pointer'
+  avatarEl.title = 'My Account'
+  avatarEl.addEventListener('click', () => goToPage('profile'))
+}
+
+// ── Collapsible sidebar sections ──────────────────────────────
+const NAV_COLLAPSE_KEY = 'aicr_nav_collapsed'
+function loadNavCollapsed() {
+  try { return JSON.parse(localStorage.getItem(NAV_COLLAPSE_KEY)) || {} } catch { return {} }
+}
+function applyNavCollapsed() {
+  const state = loadNavCollapsed()
+  document.querySelectorAll('.nav-section-toggle').forEach(toggle => {
+    const collapsed = !!state[toggle.dataset.group]
+    toggle.setAttribute('aria-expanded', String(!collapsed))
+    document.getElementById(`nav-group-${toggle.dataset.group}`)?.classList.toggle('collapsed', collapsed)
+  })
+}
+document.querySelectorAll('.nav-section-toggle').forEach(toggle => {
+  toggle.addEventListener('click', () => {
+    const state = loadNavCollapsed()
+    state[toggle.dataset.group] = !state[toggle.dataset.group]
+    localStorage.setItem(NAV_COLLAPSE_KEY, JSON.stringify(state))
+    applyNavCollapsed()
+  })
+})
+applyNavCollapsed()
+
+// ── Rail aggregate badges ─────────────────────────────────────
+// Per-tab badges keep their own ids; these roll the counts up onto the rail item.
+let _pendingCount = 0, _updateReqCount = 0
+function setRailBadge(id, n) {
+  const el = document.getElementById(id)
+  if (!el) return
+  if (n > 0) { el.textContent = n; el.style.display = 'inline-block' }
+  else el.style.display = 'none'
+}
+function refreshMembersRailBadge() { setRailBadge('members-badge', _pendingCount + _updateReqCount) }
 
 // ── Dashboard stats ───────────────────────────────────────────
 async function loadDashboardStats() {
@@ -275,8 +386,9 @@ async function loadPendingCount() {
   try {
     const res   = await api.get('/members/pending')
     const count = res.pending.length
-    const badge = document.getElementById('pending-badge')
-    if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block' }
+    _pendingCount = count
+    setRailBadge('pending-badge', count)
+    refreshMembersRailBadge()
   } catch {}
 }
 
@@ -290,14 +402,14 @@ async function loadPending() {
       return
     }
     container.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Name</th><th>Contact</th><th>Registered</th><th>Actions</th></tr></thead>
         <tbody>
           ${res.pending.map(m => `
             <tr>
-              <td>${memberNameCell(m.profile?.fullName)}</td>
-              <td>${m.email || m.phone || '—'}</td>
-              <td>${new Date(m.createdAt).toLocaleDateString('en-KE')}</td>
+              <td data-label="Name">${memberNameCell(m.profile?.fullName)}</td>
+              <td data-label="Contact">${m.email || m.phone || '—'}</td>
+              <td data-label="Registered">${new Date(m.createdAt).toLocaleDateString('en-KE')}</td>
               <td>
                 <div class="action-btns">
                   <button class="btn btn-sm btn-success" onclick="approveUser('${m.id}', this)">Approve</button>
@@ -378,7 +490,7 @@ async function loadMembers(search = '', status = '', page = _membersPage, househ
 
     _membersCache = new Map(res.members.map(m => [m.id, m]))
     container.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Name</th><th>Contact</th><th>Status</th><th>Role</th><th>Active</th><th></th></tr></thead>
         <tbody>
           ${res.members.map(m => {
@@ -393,11 +505,11 @@ async function loadMembers(search = '', status = '', page = _membersPage, househ
             )
             return `
               <tr>
-                <td>${memberNameCell(m.profile?.fullName)}</td>
-                <td>${m.email || m.phone || '—'}</td>
-                <td><span class="badge badge-${m.profile?.membershipStatus === 'ACTIVE' ? 'active' : 'inactive'}">${m.profile?.membershipStatus || '—'}</span></td>
-                <td>${formatRole(m.role)}</td>
-                <td>${m.isActive ? '<span class="badge badge-active">Yes</span>' : '<span class="badge badge-inactive">No</span>'}</td>
+                <td data-label="Name">${memberNameCell(m.profile?.fullName)}</td>
+                <td data-label="Contact">${m.email || m.phone || '—'}</td>
+                <td data-label="Status"><span class="badge badge-${m.profile?.membershipStatus === 'ACTIVE' ? 'active' : 'inactive'}">${m.profile?.membershipStatus || '—'}</span></td>
+                <td data-label="Role">${formatRole(m.role)}</td>
+                <td data-label="Active">${m.isActive ? '<span class="badge badge-active">Yes</span>' : '<span class="badge badge-inactive">No</span>'}</td>
                 <td>
                   <div class="action-btns">
                     ${m.profile ? `<button class="btn btn-sm btn-outline" onclick="openMemberEditModal('${m.id}')">Edit</button>` : ''}
@@ -606,7 +718,7 @@ async function loadInvites() {
       return
     }
     container.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Type</th><th>Target</th><th>Expires</th><th>Status</th><th>Created</th><th></th></tr></thead>
         <tbody>
           ${res.invites.map(inv => {
@@ -616,12 +728,12 @@ async function loadInvites() {
             const link    = `${window.location.origin}/pages/register.html?invite=${inv.token}`
             const canRevoke = !inv.usedAt
             return `<tr>
-              <td>${inv.type === 'INDIVIDUAL' ? 'Individual' : 'Mass'}</td>
-              <td>${inv.targetEmail ? inv.targetEmail.replace(/(?<=.).(?=[^@]*@)/g, '*') : '—'}</td>
-              <td>${inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString('en-KE') : '—'}</td>
-              <td><span class="badge ${cls}">${status}</span></td>
-              <td>${new Date(inv.createdAt).toLocaleDateString('en-KE')}</td>
-              <td>
+              <td data-label="Type">${inv.type === 'INDIVIDUAL' ? 'Individual' : 'Mass'}</td>
+              <td data-label="Target">${inv.targetEmail ? inv.targetEmail.replace(/(?<=.).(?=[^@]*@)/g, '*') : '—'}</td>
+              <td data-label="Expires">${inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString('en-KE') : '—'}</td>
+              <td data-label="Status"><span class="badge ${cls}">${status}</span></td>
+              <td data-label="Created">${new Date(inv.createdAt).toLocaleDateString('en-KE')}</td>
+              <td data-label="">
                 <div class="action-btns">
                   <button class="btn btn-sm btn-outline" onclick="copyInviteLinkById('${inv.token}')">Copy Link</button>
                   ${canRevoke ? `<button class="btn btn-sm btn-outline" style="color:var(--color-danger)" onclick="revokeInvite('${inv.id}', this)">Revoke</button>` : ''}
@@ -734,6 +846,23 @@ function syncThemeIcon() {
 }
 syncThemeIcon()
 themeBtn.addEventListener('click', (e) => {
+  const r = e.currentTarget.getBoundingClientRect()
+  toggleTheme({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
+  syncThemeIcon()
+})
+
+// ── Mobile drawer ─────────────────────────────────────────────
+const sidebarEl = document.querySelector('.sidebar')
+const navOverlay = document.getElementById('nav-overlay')
+const closeDrawer = () => { sidebarEl?.classList.remove('open'); navOverlay?.classList.remove('open') }
+document.getElementById('nav-hamburger')?.addEventListener('click', () => {
+  sidebarEl?.classList.add('open'); navOverlay?.classList.add('open')
+})
+navOverlay?.addEventListener('click', closeDrawer)
+document.querySelectorAll('.nav-link[data-page]').forEach(b => b.addEventListener('click', closeDrawer))
+document.getElementById('nav-account-btn')?.addEventListener('click', closeDrawer)
+
+document.getElementById('theme-toggle-mobile')?.addEventListener('click', (e) => {
   const r = e.currentTarget.getBoundingClientRect()
   toggleTheme({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
   syncThemeIcon()
@@ -881,15 +1010,15 @@ async function loadHouseholds() {
     }
     _householdsCache = new Map(households.map(h => [h.id, h]))
     container.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Name</th><th>Members</th><th>Created</th><th></th></tr></thead>
         <tbody>
           ${households.map(h => `
             <tr>
-              <td><a href="#" style="color:var(--color-primary);text-decoration:none;" onclick="openHouseholdDetail('${h.id}');return false;">${escHtml(h.name)}</a></td>
-              <td>${h.memberCount}</td>
-              <td>${new Date(h.createdAt).toLocaleDateString('en-KE')}</td>
-              <td>
+              <td data-label="Name"><a href="#" style="color:var(--color-primary);text-decoration:none;" onclick="openHouseholdDetail('${h.id}');return false;">${escHtml(h.name)}</a></td>
+              <td data-label="Members">${h.memberCount}</td>
+              <td data-label="Created">${new Date(h.createdAt).toLocaleDateString('en-KE')}</td>
+              <td data-label="">
                 <div class="action-btns">
                   <button class="btn btn-sm btn-outline" onclick="openHouseholdRenameModal('${h.id}')">Rename</button>
                   <button class="btn btn-sm btn-outline" onclick="deleteHousehold('${h.id}')">Delete</button>
@@ -1120,16 +1249,16 @@ function renderMinistriesPage() {
   _ministriesPage  = Math.min(_ministriesPage, totalPages)
   const slice = _ministriesAll.slice((_ministriesPage - 1) * MINISTRIES_PER_PAGE, _ministriesPage * MINISTRIES_PER_PAGE)
   container.innerHTML = `
-    <table>
+    <table class="table-stack">
       <thead><tr><th>Name</th><th>Description</th><th>Members</th><th>Active</th><th></th></tr></thead>
       <tbody>
         ${slice.map(m => `
           <tr>
-            <td><a href="#" style="color:var(--color-primary);text-decoration:none;" onclick="openMinistryDetail('${m.id}');return false;">${escHtml(m.name)}</a></td>
-            <td>${m.description ? escHtml(m.description) : '—'}</td>
-            <td>${m.memberCount}</td>
-            <td>${m.isActive ? '<span class="badge badge-active">Yes</span>' : '<span class="badge badge-inactive">No</span>'}</td>
-            <td>
+            <td data-label="Name"><a href="#" style="color:var(--color-primary);text-decoration:none;" onclick="openMinistryDetail('${m.id}');return false;">${escHtml(m.name)}</a></td>
+            <td data-label="Description">${m.description ? escHtml(m.description) : '—'}</td>
+            <td data-label="Members">${m.memberCount}</td>
+            <td data-label="Active">${m.isActive ? '<span class="badge badge-active">Yes</span>' : '<span class="badge badge-inactive">No</span>'}</td>
+            <td data-label="">
               <div class="action-btns">
                 <button class="btn btn-sm btn-outline" onclick="openMinistryDetail('${m.id}')">Members</button>
                 <button class="btn btn-sm btn-outline" onclick="openMinistryEditModal('${m.id}')">Edit</button>
@@ -1460,7 +1589,7 @@ async function loadUpdateRequests() {
       return
     }
     container.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Member</th><th>Field</th><th>Current</th><th>Proposed</th><th>Reason</th><th>Date</th><th></th></tr></thead>
         <tbody>
           ${res.requests.map(r => {
@@ -1468,12 +1597,12 @@ async function loadUpdateRequests() {
               ? `${r.requestedBy.profile.firstName} ${r.requestedBy.profile.lastName}`
               : r.requestedBy?.email || '—'
             return `<tr>
-              <td>${escHtml(name)}</td>
-              <td>${escHtml(r.field)}</td>
-              <td>${r.currentValue ? escHtml(r.currentValue) : '—'}</td>
-              <td>${escHtml(r.proposedValue)}</td>
-              <td>${r.reason ? escHtml(r.reason) : '—'}</td>
-              <td>${new Date(r.createdAt).toLocaleDateString('en-KE')}</td>
+              <td data-label="Member">${escHtml(name)}</td>
+              <td data-label="Field">${escHtml(r.field)}</td>
+              <td data-label="Current">${r.currentValue ? escHtml(r.currentValue) : '—'}</td>
+              <td data-label="Proposed">${escHtml(r.proposedValue)}</td>
+              <td data-label="Reason">${r.reason ? escHtml(r.reason) : '—'}</td>
+              <td data-label="Date">${new Date(r.createdAt).toLocaleDateString('en-KE')}</td>
               <td>
                 <div class="action-btns">
                   <button class="btn btn-sm btn-success" onclick="approveUpdateRequest('${r.id}', this)">Approve</button>
@@ -1494,9 +1623,9 @@ async function loadUpdateRequestsCount() {
   try {
     const res   = await api.get('/members/update-requests')
     const count = res.requests.length
-    const badge = document.getElementById('update-requests-badge')
-    if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block' }
-    else badge.style.display = 'none'
+    _updateReqCount = count
+    setRailBadge('update-requests-badge', count)
+    refreshMembersRailBadge()
   } catch {}
 }
 
@@ -1598,16 +1727,9 @@ let _contentEditId     = null  // null = create, string = edit
 async function refreshContentBadges() {
   try {
     const counts = await api.get('/content/unseen-counts')
-    const newsBadge   = document.getElementById('news-badge')
-    const eventsBadge = document.getElementById('events-badge')
-    if (newsBadge) {
-      if (counts.news > 0) { newsBadge.textContent = counts.news; newsBadge.style.display = 'inline-block' }
-      else newsBadge.style.display = 'none'
-    }
-    if (eventsBadge) {
-      if (counts.events > 0) { eventsBadge.textContent = counts.events; eventsBadge.style.display = 'inline-block' }
-      else eventsBadge.style.display = 'none'
-    }
+    setRailBadge('news-badge', counts.news || 0)
+    setRailBadge('events-badge', counts.events || 0)
+    setRailBadge('updates-badge', (counts.news || 0) + (counts.events || 0))
   } catch {}
 }
 
@@ -1736,6 +1858,11 @@ function contentCard(item) {
   const rsvpPill = item.type === 'EVENT' && item.registrationOpen
     ? `<span class="content-card-new-pill" style="background:var(--color-success,#22c55e);color:#fff;">RSVP Open</span>`
     : ''
+  const pricePill = item.type === 'EVENT'
+    ? (item.ticketPrice != null && Number(item.ticketPrice) > 0
+        ? `<span class="content-card-new-pill" style="background:var(--color-primary);color:#fff;">KES ${Number(item.ticketPrice).toLocaleString()}</span>`
+        : `<span class="content-card-new-pill" style="background:var(--color-border);color:var(--color-text-muted);">Free</span>`)
+    : ''
   const img = `<img class="content-card-img" src="${escHtml(item.imageUrl || defaultCover(item))}" alt="${escHtml(item.title)}" loading="lazy">`
   const locationLine = item.type === 'EVENT' && item.location
     ? `<div class="content-card-date" style="margin-top:2px;">📍 ${escHtml(item.location)}</div>`
@@ -1749,6 +1876,7 @@ function contentCard(item) {
           <span class="content-card-type">${typeLabel}</span>
           ${newPill}
           ${rsvpPill}
+          ${pricePill}
         </div>
         <h3 class="content-card-title">${escHtml(item.title)}</h3>
         <div class="content-card-date">${dateStr}</div>
@@ -1920,12 +2048,12 @@ async function loadContentAdmin(page = 1, append = false) {
       const canMutate = hasPermission('manageContent') || item.type === 'EVENT'
       return `
       <tr>
-        <td class="content-admin-title-cell">${escHtml(item.title)}</td>
-        <td><span class="content-type-chip content-type-${item.type.toLowerCase()}">${item.type.charAt(0) + item.type.slice(1).toLowerCase()}</span></td>
-        <td>${item.category ? escHtml(item.category) : '—'}</td>
-        <td>${statusBadge(item.status)}</td>
-        <td style="white-space:nowrap;">${item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('en-KE') : new Date(item.createdAt).toLocaleDateString('en-KE')}</td>
-        <td>
+        <td class="content-admin-title-cell" data-label="Title">${escHtml(item.title)}</td>
+        <td data-label="Type"><span class="content-type-chip content-type-${item.type.toLowerCase()}">${item.type.charAt(0) + item.type.slice(1).toLowerCase()}</span></td>
+        <td data-label="Category">${item.category ? escHtml(item.category) : '—'}</td>
+        <td data-label="Status">${statusBadge(item.status)}</td>
+        <td data-label="Date" style="white-space:nowrap;">${item.publishedAt ? new Date(item.publishedAt).toLocaleDateString('en-KE') : new Date(item.createdAt).toLocaleDateString('en-KE')}</td>
+        <td data-label="">
           <div class="action-btns">
             ${canMutate && item.status === 'PUBLISHED' ? `<button class="btn btn-sm btn-outline${item.isFeatured ? ' btn-featured' : ''}" title="${item.isFeatured ? 'Remove from homepage ticker' : 'Feature on homepage ticker'}" onclick="toggleFeatureItem('${item.id}', this)">${item.isFeatured ? '★' : '☆'}</button>` : ''}
             ${canMutate && item.status !== 'ARCHIVED' ? `<button class="btn btn-sm btn-outline" onclick="openContentEditModal('${item.id}')">Edit</button>` : ''}
@@ -1942,7 +2070,7 @@ async function loadContentAdmin(page = 1, append = false) {
       container.querySelector('tbody')?.insertAdjacentHTML('beforeend', rows)
     } else {
       container.innerHTML = `
-        <table>
+        <table class="table-stack">
           <thead><tr><th>Title</th><th>Type</th><th>Category</th><th>Status</th><th>Date</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
@@ -2030,6 +2158,34 @@ document.getElementById('rte-link-input')?.addEventListener('keydown', (e) => {
   }
 })
 
+function _contentFormSnapshot() {
+  return JSON.stringify({
+    type: document.getElementById('content-type-input').value,
+    category: document.getElementById('content-category-input').value,
+    title: document.getElementById('content-title-input').value,
+    body: document.getElementById('content-body-editor').innerHTML,
+    imageUrl: document.getElementById('content-imageurl-input').value,
+    eventDate: document.getElementById('content-eventdate-input').value,
+    eventEndDate: document.getElementById('content-eventenddate-input').value,
+    location: document.getElementById('content-location-input').value,
+    maxAttendees: document.getElementById('content-maxattendees-input').value,
+    ticketPrice: document.getElementById('content-ticketprice-input').value,
+    regOpen: document.getElementById('content-regopen-input').checked,
+  })
+}
+
+let _contentModalSnapshot = null
+
+async function _confirmDiscardContentChanges() {
+  if (_contentModalSnapshot === null || _contentFormSnapshot() === _contentModalSnapshot) return true
+  return confirmDialog({
+    title: 'Discard changes?',
+    message: 'You have unsaved changes to this post. Closing now will lose them.',
+    confirmText: 'Discard',
+    danger: true,
+  })
+}
+
 window.openContentCreateModal = () => {
   _contentEditId = null
   document.getElementById('content-modal-title').textContent = 'New Post'
@@ -2048,14 +2204,17 @@ window.openContentCreateModal = () => {
   document.getElementById('content-eventenddate-input').value = ''
   document.getElementById('content-location-input').value = ''
   document.getElementById('content-maxattendees-input').value = ''
+  document.getElementById('content-ticketprice-input').value = ''
   document.getElementById('content-regopen-input').checked = false
   document.getElementById('content-save-btn').textContent = 'Save Draft'
   document.getElementById('content-publish-btn').style.display = 'none'
   document.getElementById('content-modal').classList.add('open')
+  _contentModalSnapshot = _contentFormSnapshot()
 }
 
 window.openContentEditModal = async (id) => {
   _contentEditId = id
+  _contentModalSnapshot = null
   document.getElementById('content-modal-title').textContent = 'Edit Post'
   document.getElementById('content-modal-alert').className = 'hidden'
   document.getElementById('content-modal').classList.add('open')
@@ -2077,21 +2236,30 @@ window.openContentEditModal = async (id) => {
       document.getElementById('content-eventenddate-input').value = item.eventEndDate ? item.eventEndDate.slice(0, 16) : ''
       document.getElementById('content-location-input').value     = item.location || ''
       document.getElementById('content-maxattendees-input').value = item.maxAttendees || ''
+      document.getElementById('content-ticketprice-input').value  = item.ticketPrice != null ? Number(item.ticketPrice) : ''
       document.getElementById('content-regopen-input').checked    = item.registrationOpen || false
     }
 
     document.getElementById('content-save-btn').textContent = 'Save Changes'
     const publishBtn = document.getElementById('content-publish-btn')
     publishBtn.style.display = item.status === 'DRAFT' ? '' : 'none'
+    _contentModalSnapshot = _contentFormSnapshot()
   } catch (err) {
-    window.closeContentModal()
+    document.getElementById('content-modal').classList.remove('open')
+    _contentEditId = null
     toast('Failed to load content: ' + (err.message || 'Unknown error'), 'danger')
   }
 }
 
-window.closeContentModal = () => {
+function _closeContentModalForce() {
   document.getElementById('content-modal').classList.remove('open')
   _contentEditId = null
+  _contentModalSnapshot = null
+}
+
+window.closeContentModal = async () => {
+  if (!(await _confirmDiscardContentChanges())) return
+  _closeContentModalForce()
 }
 
 document.getElementById('content-modal').addEventListener('click', (e) => {
@@ -2100,41 +2268,95 @@ document.getElementById('content-modal').addEventListener('click', (e) => {
 
 // ── Attendees modal ───────────────────────────────────────────
 
+let _attendeesEventId = null, _attendeesTitle = '', _attendeesPrice = 0
+
+function attendeeRow(r, isPaid) {
+  const paid = !!r.paidAt
+  const payCell = isPaid ? `<td data-label="Payment">${
+    paid
+      ? `<span class="badge badge-active">Paid · KES ${Number(r.amountPaid).toLocaleString()}</span> <button class="btn btn-sm btn-ghost" onclick="unpayTicket('${r.userId}')">Unpay</button>`
+      : `<button class="btn btn-sm btn-outline" onclick="showPayForm(this,'${r.userId}')">Mark Paid</button>`
+  }</td>` : ''
+  return `<tr>
+      <td data-label="Name">${escHtml(r.name)}</td>
+      <td data-label="Email">${escHtml(r.email)}</td>
+      <td data-label="Phone">${r.phone ? escHtml(r.phone) : '—'}</td>
+      ${payCell}
+      <td data-label="Registered" style="white-space:nowrap;">${new Date(r.registeredAt).toLocaleDateString('en-KE')}</td>
+    </tr>`
+}
+
 window.openAttendeesModal = async (id, title) => {
   const modal = document.getElementById('attendees-modal')
   const titleEl = document.getElementById('attendees-modal-title')
   const listEl  = document.getElementById('attendees-list')
+  _attendeesEventId = id
+  _attendeesTitle = title
   titleEl.textContent = `Attendees — ${title}`
   listEl.innerHTML = '<p class="text-muted">Loading…</p>'
   modal.classList.add('open')
 
   try {
     const data = await api.get(`/content/${id}/registrations`)
+    const price = data.ticketPrice != null ? Number(data.ticketPrice) : 0
+    _attendeesPrice = price
+    const isPaid = price > 0
 
     if (!data.count) {
       listEl.innerHTML = '<p class="text-muted">No registrations yet.</p>'
       return
     }
 
+    const summary = isPaid
+      ? `${data.count} attendee${data.count !== 1 ? 's' : ''} · Ticket KES ${price.toLocaleString()} · Paid ${data.summary.paidCount}/${data.count} · Collected KES ${data.summary.collected.toLocaleString()}`
+      : `${data.count} attendee${data.count !== 1 ? 's' : ''} · Free event`
+
     listEl.innerHTML = `
-      <p style="margin-bottom:var(--space-sm);font-size:var(--font-size-sm);color:var(--color-text-muted);">${data.count} attendee${data.count !== 1 ? 's' : ''}</p>
-      <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Registered</th></tr></thead>
+      <p style="margin-bottom:var(--space-sm);font-size:var(--font-size-sm);color:var(--color-text-muted);">${summary}</p>
+      <table class="table-stack">
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th>${isPaid ? '<th>Payment</th>' : ''}<th>Registered</th></tr></thead>
         <tbody>
-          ${data.registrations.map(r => `
-            <tr>
-              <td>${escHtml(r.name)}</td>
-              <td>${escHtml(r.email)}</td>
-              <td>${r.phone ? escHtml(r.phone) : '—'}</td>
-              <td style="white-space:nowrap;">${new Date(r.registeredAt).toLocaleDateString('en-KE')}</td>
-            </tr>
-          `).join('')}
+          ${data.registrations.map(r => attendeeRow(r, isPaid)).join('')}
         </tbody>
       </table>
     `
   } catch (err) {
     listEl.innerHTML = '<p class="text-muted">Failed to load attendees.</p>'
   }
+}
+
+window.showPayForm = (btn, userId) => {
+  btn.closest('td').innerHTML = `
+    <div class="ticket-pay-form">
+      <input class="form-input form-input-sm" type="number" min="0" step="0.01" value="${_attendeesPrice || ''}" id="pay-amt-${userId}" style="width:90px">
+      <select class="form-select form-input-sm" id="pay-method-${userId}" style="width:auto">
+        <option value="CASH">Cash</option>
+        <option value="MPESA">M-Pesa</option>
+        <option value="BANK_TRANSFER">Bank</option>
+        <option value="CARD">Card</option>
+        <option value="OTHER">Other</option>
+      </select>
+      <input class="form-input form-input-sm" type="text" placeholder="Ref" id="pay-ref-${userId}" style="width:80px">
+      <button class="btn btn-sm btn-primary" onclick="confirmPay('${userId}')">Save</button>
+    </div>`
+}
+
+window.confirmPay = async (userId) => {
+  const amount = parseFloat(document.getElementById(`pay-amt-${userId}`).value)
+  const method = document.getElementById(`pay-method-${userId}`).value
+  const reference = document.getElementById(`pay-ref-${userId}`).value.trim() || null
+  if (!Number.isFinite(amount) || amount < 0) { toast('Enter a valid amount', 'danger'); return }
+  try {
+    await api.post(`/content/${_attendeesEventId}/registrations/${userId}/pay`, { amount, method, reference })
+    openAttendeesModal(_attendeesEventId, _attendeesTitle)
+  } catch (err) { toast(err.message || 'Failed to record payment', 'danger') }
+}
+
+window.unpayTicket = async (userId) => {
+  try {
+    await api.post(`/content/${_attendeesEventId}/registrations/${userId}/unpay`, {})
+    openAttendeesModal(_attendeesEventId, _attendeesTitle)
+  } catch (err) { toast(err.message || 'Failed to update', 'danger') }
 }
 
 window.closeAttendeesModal = () => {
@@ -2169,6 +2391,8 @@ window.saveContent = async () => {
     body.location         = document.getElementById('content-location-input').value.trim() || null
     body.maxAttendees     = parseInt(document.getElementById('content-maxattendees-input').value) || null
     body.registrationOpen = document.getElementById('content-regopen-input').checked
+    const tp = parseFloat(document.getElementById('content-ticketprice-input').value)
+    body.ticketPrice      = Number.isFinite(tp) && tp > 0 ? tp : null
   }
 
   try {
@@ -2177,7 +2401,7 @@ window.saveContent = async () => {
     } else {
       await api.post('/content', body)
     }
-    window.closeContentModal()
+    _closeContentModalForce()
     loadContentAdmin()
     refreshContentBadges()
   } catch (err) {
@@ -2195,7 +2419,7 @@ window.publishCurrentContent = async () => {
   btn.disabled = true; btn.textContent = 'Publishing…'
   try {
     await api.post(`/content/${_contentEditId}/publish`)
-    window.closeContentModal()
+    _closeContentModalForce()
     loadContentAdmin()
     refreshContentBadges()
     toast('Content published successfully', 'success')
@@ -2644,6 +2868,7 @@ async function loadMyGivings() {
   const summaryEl = document.getElementById('my-givings-summary')
   const listEl    = document.getElementById('my-givings-list')
   listEl.innerHTML = skeletonRows()
+  loadMyPledges()
   try {
     const res = await api.get('/givings/mine')
     // Summary cards
@@ -2664,16 +2889,16 @@ async function loadMyGivings() {
       return
     }
     listEl.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Project</th><th>Amount</th><th>Method</th><th>Date</th><th>Reference</th><th></th></tr></thead>
         <tbody>
           ${res.items.map(g => `
             <tr>
-              <td>${escHtml(g.projectName || '—')}</td>
-              <td>${fmtKES(g.amount)}</td>
-              <td>${paymentLabel(g.paymentMethod)}</td>
-              <td>${new Date(g.givenAt).toLocaleDateString('en-KE')}</td>
-              <td>${g.reference ? escHtml(g.reference) : '—'}</td>
+              <td data-label="Project">${escHtml(g.projectName || '—')}</td>
+              <td data-label="Amount">${fmtKES(g.amount)}</td>
+              <td data-label="Method">${paymentLabel(g.paymentMethod)}</td>
+              <td data-label="Date">${new Date(g.givenAt).toLocaleDateString('en-KE')}</td>
+              <td data-label="Reference">${g.reference ? escHtml(g.reference) : '—'}</td>
               <td>
                 <div class="action-btns">
                   <button class="btn btn-sm btn-outline" onclick="downloadReceipt('${g.id}')">Receipt</button>
@@ -2689,6 +2914,177 @@ async function loadMyGivings() {
     listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load giving history.</p>'
   }
 }
+
+// ── Pledges ───────────────────────────────────────────────────
+
+function pledgeBar(p) {
+  const cls = p.status !== 'ACTIVE' ? 'muted' : (p.onTrack ? 'ok' : 'behind')
+  return `<div class="pledge-bar"><span class="pledge-bar-fill ${cls}" style="width:${p.percent}%"></span></div>`
+}
+
+async function loadMyPledges() {
+  const el = document.getElementById('my-pledges-list')
+  if (!el) return
+  el.innerHTML = '<p class="text-muted">Loading…</p>'
+  try {
+    const res = await api.get('/givings/pledges/mine')
+    if (!res.pledges.length) {
+      el.innerHTML = '<p class="text-muted">No pledges yet.</p>'
+      return
+    }
+    el.innerHTML = res.pledges.map(p => `
+      <div class="pledge-card">
+        <div class="pledge-card-head">
+          <strong>${escHtml(p.projectName || '—')}</strong>
+          <span class="badge badge-${p.status === 'ACTIVE' ? 'active' : 'inactive'}">${p.status}</span>
+        </div>
+        <div class="text-muted" style="font-size:var(--font-size-sm)">${fmtKES(p.totalAmount)} over ${p.months} month${p.months !== 1 ? 's' : ''} · ${fmtKES(p.monthlyExpected)}/mo</div>
+        ${pledgeBar(p)}
+        <div class="pledge-card-foot">
+          <span>${fmtKES(p.fulfilled)} of ${fmtKES(p.totalAmount)} (${p.percent}%)</span>
+          ${p.status === 'ACTIVE' ? `<button class="btn btn-sm btn-ghost" onclick="cancelPledge('${p.id}')">Cancel</button>` : ''}
+        </div>
+      </div>
+    `).join('')
+  } catch {
+    el.innerHTML = '<p class="text-muted">Failed to load pledges.</p>'
+  }
+}
+
+async function loadPledgesAdmin() {
+  const el = document.getElementById('pledges-list')
+  el.innerHTML = skeletonRows()
+  try {
+    const res = await api.get('/givings/pledges')
+    if (!res.pledges.length) {
+      el.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No pledges yet.</p>'
+      return
+    }
+    el.innerHTML = `
+      <table class="table-stack">
+        <thead><tr><th>Member</th><th>Project</th><th>Total</th><th>Monthly</th><th>Progress</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${res.pledges.map(p => `
+            <tr>
+              <td data-label="Member">${escHtml(p.memberName || '—')}</td>
+              <td data-label="Project">${escHtml(p.projectName || '—')}</td>
+              <td data-label="Total">${fmtKES(p.totalAmount)}</td>
+              <td data-label="Monthly">${fmtKES(p.monthlyExpected)}</td>
+              <td data-label="Progress" style="min-width:160px">${pledgeBar(p)}<span style="font-size:var(--font-size-sm);color:var(--color-text-muted)">${fmtKES(p.fulfilled)} (${p.percent}%)</span></td>
+              <td data-label="Status"><span class="badge badge-${p.status === 'ACTIVE' ? 'active' : 'inactive'}">${p.status}</span></td>
+              <td data-label="">${p.status === 'ACTIVE' ? `<button class="btn btn-sm btn-ghost" onclick="cancelPledge('${p.id}', true)">Cancel</button>` : ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `
+  } catch {
+    el.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load pledges.</p>'
+  }
+}
+
+window.cancelPledge = async (id, isAdmin = false) => {
+  const ok = await confirmDialog({ title: 'Cancel this pledge?', message: 'The pledge will be marked cancelled.', confirmText: 'Cancel pledge', danger: true })
+  if (!ok) return
+  try {
+    await api.patch(`/givings/pledges/${id}/cancel`, {})
+    isAdmin ? loadPledgesAdmin() : loadMyPledges()
+    toast('Pledge cancelled', 'success')
+  } catch (err) { toast(err.message || 'Failed to cancel', 'danger') }
+}
+
+// ── Pledge modal (shared: 'admin' shows member picker, 'self' hides it) ──
+let _pledgeMode = 'self'
+let _pledgeMemberId = null
+
+window.openPledgeModal = async (mode) => {
+  _pledgeMode = mode
+  _pledgeMemberId = null
+  document.getElementById('pledge-modal-alert').className = 'hidden'
+  document.getElementById('pledge-total-input').value = ''
+  document.getElementById('pledge-months-input').value = ''
+  document.getElementById('pledge-note-input').value = ''
+  clearPledgeMember()
+
+  const memberGroup = document.getElementById('pledge-member-group')
+  memberGroup.style.display = mode === 'admin' ? '' : 'none'
+  if (mode === 'admin' && !_givingModalMembers.length) {
+    _givingModalMembers = await api.get('/members/slim').catch(() => [])
+  }
+
+  const projectSel = document.getElementById('pledge-project-input')
+  const projects = await api.get('/givings/projects?active=1').catch(() => [])
+  projectSel.innerHTML = projects.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('')
+
+  document.getElementById('pledge-modal').classList.add('open')
+}
+
+window.closePledgeModal = () => document.getElementById('pledge-modal').classList.remove('open')
+
+function setPledgeMember(profileId, name) {
+  _pledgeMemberId = profileId
+  document.getElementById('pledge-member-results').classList.add('hidden')
+  document.getElementById('pledge-member-search').closest('.member-search-wrap').style.display = 'none'
+  document.getElementById('pledge-member-selected-name').textContent = name
+  document.getElementById('pledge-member-selected').classList.remove('hidden')
+}
+
+window.clearPledgeMember = () => {
+  _pledgeMemberId = null
+  const search = document.getElementById('pledge-member-search')
+  search.value = ''
+  document.getElementById('pledge-member-results').classList.add('hidden')
+  document.getElementById('pledge-member-selected').classList.add('hidden')
+  search.closest('.member-search-wrap').style.display = ''
+}
+
+document.getElementById('pledge-member-search')?.addEventListener('input', e => {
+  const q = e.target.value.trim().toLowerCase()
+  const resultsEl = document.getElementById('pledge-member-results')
+  const matches = q ? _givingModalMembers.filter(m => m.fullName.toLowerCase().includes(q)).slice(0, 20) : []
+  if (!matches.length) { resultsEl.classList.add('hidden'); return }
+  resultsEl.innerHTML = matches.map(m => `<div class="msd-item" data-profile-id="${m.profileId}" data-name="${escHtml(m.fullName)}">${escHtml(m.fullName)}</div>`).join('')
+  resultsEl.classList.remove('hidden')
+})
+document.getElementById('pledge-member-results')?.addEventListener('click', e => {
+  const item = e.target.closest('.msd-item')
+  if (item) setPledgeMember(item.dataset.profileId, item.dataset.name)
+})
+
+window.savePledge = async () => {
+  const alertEl = document.getElementById('pledge-modal-alert')
+  alertEl.className = 'hidden'
+  const projectId = document.getElementById('pledge-project-input').value
+  const totalAmount = parseFloat(document.getElementById('pledge-total-input').value)
+  const months = parseInt(document.getElementById('pledge-months-input').value)
+  if (!projectId) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Project is required.'; return }
+  if (!totalAmount || totalAmount <= 0) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Enter a positive total amount.'; return }
+  if (!months || months < 1) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Enter a number of months.'; return }
+  if (_pledgeMode === 'admin' && !_pledgeMemberId) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Select a member.'; return }
+
+  const body = {
+    projectId, totalAmount, months,
+    note: document.getElementById('pledge-note-input').value.trim() || null,
+    ...(_pledgeMode === 'admin' ? { memberId: _pledgeMemberId } : {}),
+  }
+  const btn = document.getElementById('pledge-save-btn')
+  btn.disabled = true; btn.textContent = 'Saving…'
+  try {
+    await api.post('/givings/pledges', body)
+    closePledgeModal()
+    _pledgeMode === 'admin' ? loadPledgesAdmin() : loadMyPledges()
+    toast('Pledge created', 'success')
+  } catch (err) {
+    alertEl.className = 'alert alert-danger'
+    alertEl.textContent = err.message || 'Failed to create pledge'
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Pledge'
+  }
+}
+
+document.getElementById('pledge-modal')?.addEventListener('click', e => {
+  if (e.target === e.currentTarget) closePledgeModal()
+})
 
 // ── Correction request modal (member) ─────────────────────────
 
@@ -2785,7 +3181,7 @@ async function loadGivingsLedger(page = 1) {
     }
 
     listEl.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Member</th><th>Project</th><th>Amount</th><th>Method</th><th>Date</th><th>Ref</th><th>Status</th><th></th></tr></thead>
         <tbody>
           ${res.items.map(g => {
@@ -2797,13 +3193,13 @@ async function loadGivingsLedger(page = 1) {
             const voidedStyle = g.voided ? 'opacity:0.55;' : ''
             return `
               <tr style="${voidedStyle}">
-                <td>${memberCell}</td>
-                <td>${escHtml(g.projectName || '—')}</td>
-                <td>${fmtKES(g.amount)}</td>
-                <td>${paymentLabel(g.paymentMethod)}</td>
-                <td style="white-space:nowrap;">${new Date(g.givenAt).toLocaleDateString('en-KE')}</td>
-                <td>${g.reference ? escHtml(g.reference) : '—'}</td>
-                <td>${g.voided ? '<span class="badge badge-inactive">Voided</span>' : '<span class="badge badge-active">Active</span>'}</td>
+                <td data-label="Member">${memberCell}</td>
+                <td data-label="Project">${escHtml(g.projectName || '—')}</td>
+                <td data-label="Amount">${fmtKES(g.amount)}</td>
+                <td data-label="Method">${paymentLabel(g.paymentMethod)}</td>
+                <td data-label="Date" style="white-space:nowrap;">${new Date(g.givenAt).toLocaleDateString('en-KE')}</td>
+                <td data-label="Ref">${g.reference ? escHtml(g.reference) : '—'}</td>
+                <td data-label="Status">${g.voided ? '<span class="badge badge-inactive">Voided</span>' : '<span class="badge badge-active">Active</span>'}</td>
                 <td>
                   <div class="action-btns">
                     ${!g.voided ? `<button class="btn btn-sm btn-outline" onclick="downloadReceipt('${g.id}')">Receipt</button>` : ''}
@@ -3057,18 +3453,18 @@ async function loadGivingProjects() {
       return
     }
     listEl.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Name</th><th>Description</th><th>Target</th><th>Raised</th><th>Records</th><th>Active</th><th></th></tr></thead>
         <tbody>
           ${projects.map(p => `
             <tr>
-              <td>${escHtml(p.name)}</td>
-              <td>${p.description ? escHtml(p.description) : '—'}</td>
-              <td>${p.targetAmount ? fmtKES(p.targetAmount) : '—'}</td>
-              <td>${fmtKES(p.totalRaised)}</td>
-              <td>${p.givingCount}</td>
-              <td>${p.isActive ? '<span class="badge badge-active">Yes</span>' : '<span class="badge badge-inactive">No</span>'}</td>
-              <td>
+              <td data-label="Name">${escHtml(p.name)}</td>
+              <td data-label="Description">${p.description ? escHtml(p.description) : '—'}</td>
+              <td data-label="Target">${p.targetAmount ? fmtKES(p.targetAmount) : '—'}</td>
+              <td data-label="Raised">${fmtKES(p.totalRaised)}</td>
+              <td data-label="Records">${p.givingCount}</td>
+              <td data-label="Active">${p.isActive ? '<span class="badge badge-active">Yes</span>' : '<span class="badge badge-inactive">No</span>'}</td>
+              <td data-label="">
                 <div class="action-btns">
                   <button class="btn btn-sm btn-outline" onclick="openProjectModal('${p.id}')">Edit</button>
                   ${p.isActive ? `<button class="btn btn-sm btn-outline" onclick="deactivateProject('${p.id}')">Deactivate</button>` : ''}
@@ -3168,15 +3564,12 @@ let _correctionReviewId = null
 
 async function loadCorrectionRequests() {
   const listEl = document.getElementById('correction-requests-list')
-  const badge  = document.getElementById('giving-requests-badge')
   listEl.innerHTML = skeletonRows()
   try {
     const res = await api.get('/givings/requests')
     const pending = res.requests.filter(r => r.status === 'PENDING').length
-    if (badge) {
-      badge.textContent = pending || ''
-      badge.style.display = pending ? 'inline-block' : 'none'
-    }
+    setRailBadge('giving-requests-badge', pending)
+    setRailBadge('givings-badge', pending)
     if (!res.requests.length) {
       listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No correction requests.</p>'
       return
@@ -3186,7 +3579,7 @@ async function loadCorrectionRequests() {
       return `<span class="badge ${cls}">${s.charAt(0) + s.slice(1).toLowerCase()}</span>`
     }
     listEl.innerHTML = `
-      <table>
+      <table class="table-stack">
         <thead><tr><th>Requester</th><th>Giving</th><th>Proposed</th><th>Status</th><th>Date</th><th></th></tr></thead>
         <tbody>
           ${res.requests.map(r => {
@@ -3196,12 +3589,12 @@ async function loadCorrectionRequests() {
               .join(', ') || '—'
             return `
               <tr>
-                <td>${escHtml(r.requester.name)}</td>
-                <td>${r.giving ? `${fmtKES(r.giving.amount)} · ${escHtml(r.giving.projectName || '—')}` : '—'}</td>
-                <td style="font-size:var(--font-size-sm);">${escHtml(proposedStr)}</td>
-                <td>${statusBadge(r.status)}</td>
-                <td style="white-space:nowrap;">${new Date(r.createdAt).toLocaleDateString('en-KE')}</td>
-                <td>
+                <td data-label="Requester">${escHtml(r.requester.name)}</td>
+                <td data-label="Giving">${r.giving ? `${fmtKES(r.giving.amount)} · ${escHtml(r.giving.projectName || '—')}` : '—'}</td>
+                <td data-label="Proposed" style="font-size:var(--font-size-sm);">${escHtml(proposedStr)}</td>
+                <td data-label="Status">${statusBadge(r.status)}</td>
+                <td data-label="Date" style="white-space:nowrap;">${new Date(r.createdAt).toLocaleDateString('en-KE')}</td>
+                <td data-label="">
                   ${r.status === 'PENDING' ? `<button class="btn btn-sm btn-outline" onclick="openCorrectionReviewModal('${r.id}')">Review</button>` : ''}
                 </td>
               </tr>

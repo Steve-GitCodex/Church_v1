@@ -16,6 +16,13 @@ export function getCurrentUser() {
   return decodeToken(token)
 }
 
+// Redirect already-logged-in users away from guest-only pages (login, register, password reset)
+export function requireGuest() {
+  const user = getCurrentUser()
+  if (user) { window.location.href = '/pages/dashboard.html'; return user }
+  return null
+}
+
 // Redirect to login if not authenticated
 export function requireAuth() {
   const user = getCurrentUser()

@@ -83,6 +83,7 @@ function formatItem(item, isNew) {
     location: item.location,
     maxAttendees: item.maxAttendees,
     registrationOpen: item.registrationOpen,
+    ticketPrice: item.ticketPrice,
     publishedAt: item.publishedAt,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
@@ -283,6 +284,7 @@ export async function createContent(req, res, next) {
       location:         z.string().max(255).optional().nullable(),
       maxAttendees:     z.number().int().positive().optional().nullable(),
       registrationOpen: z.boolean().optional(),
+      ticketPrice:      z.number().nonnegative().optional().nullable(),
       isFeatured:       z.boolean().optional(),
     })
     const data = schema.parse(req.body)
@@ -302,6 +304,7 @@ export async function createContent(req, res, next) {
         location:         data.location ?? null,
         maxAttendees:     data.maxAttendees ?? null,
         registrationOpen: data.registrationOpen ?? false,
+        ticketPrice:      data.ticketPrice ?? null,
         isFeatured:       data.isFeatured ?? false,
         authorId:         req.user.userId,
         status:           'DRAFT',
@@ -329,6 +332,7 @@ export async function updateContent(req, res, next) {
       location:         z.string().max(255).optional().nullable(),
       maxAttendees:     z.number().int().positive().optional().nullable(),
       registrationOpen: z.boolean().optional(),
+      ticketPrice:      z.number().nonnegative().optional().nullable(),
       isFeatured:       z.boolean().optional(),
     })
     const data = schema.parse(req.body)
@@ -349,6 +353,7 @@ export async function updateContent(req, res, next) {
     if ('maxAttendees' in data)   updateData.maxAttendees = data.maxAttendees ?? null
     if ('eventDate' in data)      updateData.eventDate = data.eventDate ? new Date(data.eventDate) : null
     if ('eventEndDate' in data)   updateData.eventEndDate = data.eventEndDate ? new Date(data.eventEndDate) : null
+    if ('ticketPrice' in data)    updateData.ticketPrice = data.ticketPrice ?? null
     if (data.registrationOpen !== undefined) updateData.registrationOpen = data.registrationOpen
     if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured
 
@@ -506,16 +511,84 @@ export async function listRegistrations(req, res, next) {
       orderBy: { createdAt: 'asc' },
     })
 
+    const ticketPrice = item.ticketPrice ? Number(item.ticketPrice) : 0
+    const paidCount = regs.filter(r => r.paidAt).length
+    const collected = regs.reduce((sum, r) => sum + (r.amountPaid ? Number(r.amountPaid) : 0), 0)
+
     res.json({
       count: regs.length,
+      ticketPrice: item.ticketPrice,
+      summary: { paidCount, unpaidCount: regs.length - paidCount, collected, expected: ticketPrice * regs.length },
       registrations: regs.map(r => ({
         userId: r.userId,
         email: r.user.email,
         name: r.user.profile ? `${r.user.profile.firstName} ${r.user.profile.lastName}` : r.user.email,
         phone: r.user.profile?.phone ?? null,
         registeredAt: r.createdAt,
+        paidAt: r.paidAt,
+        amountPaid: r.amountPaid,
+        paymentMethod: r.paymentMethod,
+        paymentReference: r.paymentReference,
       })),
     })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ─── POST /api/content/:id/registrations/:userId/pay (manager — mark ticket paid) ──
+export async function markRegistrationPaid(req, res, next) {
+  try {
+    const schema = z.object({
+      amount:    z.number().nonnegative(),
+      method:    z.enum(['CASH', 'MPESA', 'BANK_TRANSFER', 'CARD', 'OTHER']),
+      reference: z.string().max(255).optional().nullable(),
+    })
+    const data = schema.parse(req.body)
+
+    const item = await prisma.content.findUnique({ where: { id: req.params.id } })
+    if (!item) return res.status(404).json({ error: 'Content not found' })
+    if (item.type !== 'EVENT') return res.status(400).json({ error: 'Only events have registrations' })
+    if (!canManageItemType(req.user, item.type)) {
+      return res.status(403).json({ error: 'You can only manage EVENT content with your current permissions' })
+    }
+
+    const reg = await prisma.eventRegistration.findUnique({
+      where: { contentId_userId: { contentId: req.params.id, userId: req.params.userId } },
+    })
+    if (!reg) return res.status(404).json({ error: 'Registration not found' })
+
+    await prisma.eventRegistration.update({
+      where: { id: reg.id },
+      data: {
+        amountPaid:       data.amount,
+        paymentMethod:    data.method,
+        paymentReference: data.reference ?? null,
+        paidAt:           new Date(),
+      },
+    })
+    res.json({ paid: true })
+  } catch (err) {
+    if (err.name === 'ZodError') return res.status(400).json({ error: err.errors })
+    next(err)
+  }
+}
+
+// ─── POST /api/content/:id/registrations/:userId/unpay (manager — clear payment) ──
+export async function unmarkRegistrationPaid(req, res, next) {
+  try {
+    const item = await prisma.content.findUnique({ where: { id: req.params.id } })
+    if (!item) return res.status(404).json({ error: 'Content not found' })
+    if (item.type !== 'EVENT') return res.status(400).json({ error: 'Only events have registrations' })
+    if (!canManageItemType(req.user, item.type)) {
+      return res.status(403).json({ error: 'You can only manage EVENT content with your current permissions' })
+    }
+
+    await prisma.eventRegistration.updateMany({
+      where: { contentId: req.params.id, userId: req.params.userId },
+      data: { amountPaid: null, paymentMethod: null, paymentReference: null, paidAt: null },
+    })
+    res.json({ paid: false })
   } catch (err) {
     next(err)
   }

@@ -1,5 +1,8 @@
 import { api } from '../api.js'
+import { requireGuest } from '../auth.js'
 import { toggleTheme, currentTheme } from '../theme.js'
+
+requireGuest()
 
 const fab = document.getElementById('theme-fab')
 const syncFab = () => { fab.textContent = currentTheme() === 'dark' ? '🌙' : '☀️' }
