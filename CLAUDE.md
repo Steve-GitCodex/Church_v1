@@ -47,16 +47,29 @@ frontend/
         login.js           ← login page logic
         forgot-password.js ← forgot password page logic
         reset-password.js  ← reset password page logic
-        dashboard.js       ← dashboard page logic (news, events, content admin, badge polling, about editor)
+        dashboard.js       ← dashboard entry point — init, nav routing, imports dashboard/* modules
         news.js            ← public news & announcements feed page logic
         events.js          ← public events feed page logic (RSVP for authenticated users)
         about.js           ← public about page logic (fetches /api/site/about, renders all sections)
+      dashboard/           ← per-domain dashboard modules (one file per admin domain)
+        core.js            ← app init, nav routing, stat widgets, theme sync, mobile drawer
+        members.js         ← members list/filter/edit/role modal/invite links
+        households.js      ← households CRUD + detail modal
+        ministries.js      ← ministries CRUD + detail modal
+        content-admin.js   ← news/events CMS, badge polling, rich-text modal
+        account.js         ← profile, update-request review queue, user-level settings (theme)
   pages/
     login.html
     register.html
     forgot-password.html
     reset-password.html
-    dashboard.html
+    dashboard.html         ← shell only (.layout, sidebar, utility panel, topbar) + empty tab containers
+    dashboard/             ← lazy-loaded per-tab HTML partials, fetched once and cached by the matching dashboard/*.js module
+      members.html
+      households.html
+      ministries.html
+      content.html
+      account.html
     news.html              ← public news & announcements feed
     events.html            ← public events feed
     about.html             ← public About page (CMS-fed)
@@ -95,15 +108,22 @@ The utility panel collapses to a 60 px icon rail; state persisted to `localStora
 ```
 backend/src/
   config/       ← env.js (all config + env.rateLimit), db.js (singleton PrismaClient)
-  controllers/  ← business logic, one file per domain
-                   auth.js, members.js, households.js, ministries.js,
-                   content.js, givings.js, notifications.js, site.js
+  controllers/  ← business logic, one file per domain (split into CRUD vs. admin/report
+                   sub-modules once a domain grows past ~400 lines — see members/content/givings below)
+                   auth.js, members.js, memberAdmin.js, members/shared.js,
+                   households.js, ministries.js,
+                   content.js, contentEvents.js, content/shared.js,
+                   givings.js, givingsReports.js,
+                   notifications.js, site.js
   middleware/   ← auth.js (authenticate, requireRole, requireMinRole,
                    requirePermission, requireContentPermission)
-  routes/       ← thin routers, import from controllers
+  routes/       ← thin routers, import from controllers (may import from more than
+                   one controller file per domain, e.g. routes/members.js imports
+                   from both members.js and memberAdmin.js)
                    auth.js, members.js, households.js, ministries.js,
                    content.js, givings.js, notifications.js, site.js
-  services/     ← otp.js, email.js, token.js, notifications.js (reusable, no Express req/res)
+  services/     ← otp.js, email.js, token.js, notifications.js, sanitize.js,
+                   securityReviewReminder.js (reusable, no Express req/res)
   __tests__/    ← integration tests (vitest + supertest, real DB)
                    helpers.js, auth.test.js, members.test.js, content.test.js,
                    notifications.test.js, site.test.js
@@ -182,6 +202,11 @@ production.
 
 ## Code Quality Rules (from project-wide AI guidelines)
 
+- **No god files.** A file should own one clear domain. If a controller/service/frontend module is
+  approaching ~400 lines or starts covering more than one distinct responsibility, split it into
+  sibling modules before adding more to it — don't grow an existing large file when a new module is
+  the natural home for new logic. Reference pattern: `backend/src/controllers/members.js` (self-service
+  + listing) vs `memberAdmin.js` (promote/role/create/approve), sharing constants from `members/shared.js`.
 - **Read before editing.** Never propose changes to a file that hasn't been examined with the Read tool first.
 - **No over-engineering.** Implement exactly what is requested. No helper abstractions for one-time operations.
 - **No unnecessary files.** No example files, template files, or speculative future-use files.

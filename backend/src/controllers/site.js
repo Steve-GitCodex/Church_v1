@@ -4,6 +4,7 @@ import {
   SCHEDULE_KEY as SECURITY_SCHEDULE_KEY,
   getSecurityReviewSchedule,
   scheduleSecurityReviewReminder,
+  sendMonthlyReminder,
 } from '../services/securityReviewReminder.js'
 
 const ABOUT_KEY    = 'about'
@@ -147,4 +148,22 @@ export async function updateSecurityReviewScheduleSetting(req, res, next) {
     await scheduleSecurityReviewReminder()
     res.json(parsed.data)
   } catch (err) { next(err) }
+}
+
+const RunNowSchema = z.object({ to: z.string().email().optional() })
+
+export async function runSecurityReviewNow(req, res, next) {
+  try {
+    const parsed = RunNowSchema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid recipient' })
+    }
+    await sendMonthlyReminder({ to: parsed.data.to })
+    res.json({ sent: true })
+  } catch (err) {
+    if (err.message === 'No active Super Admin found with that email') {
+      return res.status(400).json({ error: err.message })
+    }
+    next(err)
+  }
 }

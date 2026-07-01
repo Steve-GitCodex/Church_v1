@@ -144,4 +144,34 @@ describe('GET/PUT /api/site/security-review-schedule', () => {
       .send({ enabled: true, dayOfMonth: 31, hour: 8 })
       .expect(400)
   })
+
+  describe('POST /api/site/security-review/run-now', () => {
+    it('returns 401 without a token', async () => {
+      await request(app).post('/api/site/security-review/run-now').expect(401)
+    })
+
+    it('returns 403 for an ADMIN (SUPER_ADMIN only)', async () => {
+      await request(app)
+        .post('/api/site/security-review/run-now')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(403)
+    })
+
+    it('sends immediately to a specific Super Admin as SUPER_ADMIN', async () => {
+      const res = await request(app)
+        .post('/api/site/security-review/run-now')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ to: _superAdminEmail })
+        .expect(200)
+      expect(res.body).toEqual({ sent: true })
+    })
+
+    it('returns 400 when the recipient is not an active Super Admin', async () => {
+      await request(app)
+        .post('/api/site/security-review/run-now')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ to: memberEmail })
+        .expect(400)
+    })
+  })
 })

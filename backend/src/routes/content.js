@@ -14,12 +14,14 @@ import {
   restoreContent,
   toggleFeatured,
   uploadImage,
+} from '../controllers/content.js'
+import {
   rsvp,
   cancelRsvp,
   listRegistrations,
   markRegistrationPaid,
   unmarkRegistrationPaid,
-} from '../controllers/content.js'
+} from '../controllers/contentEvents.js'
 
 const router = Router()
 

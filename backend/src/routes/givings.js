@@ -4,10 +4,10 @@ import {
   requireGivingsFeature,
   listProjects, createProject, updateProject, deactivateProject,
   listGivings, recordGiving, getGiving, updateGiving, voidGiving,
-  givingReceipt, givingSummary, givingReport,
   listMine, requestCorrection,
   listCorrectionRequests, approveCorrection, rejectCorrection,
 } from '../controllers/givings.js'
+import { givingReceipt, givingSummary, givingReport } from '../controllers/givingsReports.js'
 import {
   createPledge, listPledges, listMyPledges, updatePledge, cancelPledge,
 } from '../controllers/pledges.js'

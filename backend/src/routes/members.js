@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { authenticate, requireMinRole } from '../middleware/auth.js'
-import { getMe, updateMe, requestProfileUpdate, listMembers, listPending, listMembersSlim, getMember, promoteMember, updateMember, deactivateMember, reactivateMember, createMember, listUpdateRequests, approveUpdateRequest, rejectUpdateRequest } from '../controllers/members.js'
+import { getMe, updateMe, requestProfileUpdate, listMembers, listPending, listMembersSlim, getMember, listUpdateRequests } from '../controllers/members.js'
+import { promoteMember, updateMember, deactivateMember, reactivateMember, createMember, approveUpdateRequest, rejectUpdateRequest } from '../controllers/memberAdmin.js'
 
 const router = Router()
 

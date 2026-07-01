@@ -38,10 +38,7 @@
         <button class="nav-link givings-manager-nav giving-feature-nav hidden" data-page="givings-admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span class="nav-label">Givings</span> <span id="givings-badge" class="badge badge-pending" style="margin-left:auto;display:none"></span></button>
       </div>
 
-      <button class="nav-section-toggle super-admin-only hidden" data-group="system" aria-expanded="true"><span>System</span><svg class="nav-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
-      <div class="nav-group super-admin-only hidden" id="nav-group-system">
-        <button class="nav-link super-admin-only hidden" data-page="system"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="nav-label">System</span></button>
-      </div>
+      <button class="nav-link" data-page="user-settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="nav-label">Settings</span></button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn btn-outline btn-sm btn-full mobile-only" id="theme-toggle-mobile" style="border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.75);margin-bottom:var(--space-sm)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span class="nav-label">Toggle Theme</span></button>
@@ -277,6 +274,26 @@
         </div><!-- /reports panel -->
       </div><!-- /page-givings-admin -->
 
+      <!-- User Settings (all roles) -->
+      <div class="page" id="page-user-settings">
+        <h2 class="page-title-lg">Settings</h2>
+        <div class="card" style="max-width:500px;">
+          <h3 style="margin-bottom:var(--space-lg)">Appearance</h3>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
+            <div>
+              <div style="font-weight:600;font-size:var(--font-size-sm);">Theme</div>
+              <div style="font-size:var(--font-size-sm);color:var(--color-text-muted);">Switch between light and dark mode</div>
+            </div>
+            <button class="btn btn-outline btn-sm" id="theme-toggle-user-settings" title="Toggle theme" aria-label="Toggle dark/light mode">
+              <span class="util-icon" id="theme-icon-user-settings">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              </span>
+              Toggle Theme
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- System Settings (SUPER_ADMIN) -->
       <div class="page super-admin-only hidden" id="page-system">
         <h2 class="page-title-lg">System Settings</h2>
@@ -322,6 +339,12 @@
             <select class="form-select" id="security-schedule-hour" style="width:auto;"></select>
           </div>
           <button class="btn btn-primary" id="security-schedule-save-btn" style="margin-top:var(--space-md);">Save Schedule</button>
+
+          <div class="form-group" style="margin-top:var(--space-lg);border-top:1px solid var(--color-border);padding-top:var(--space-lg);">
+            <label class="form-label" for="security-review-run-now-email">Send to (optional, leave blank for all Super Admins)</label>
+            <input class="form-input" type="email" id="security-review-run-now-email" placeholder="admin@example.com">
+            <button class="btn btn-outline" id="security-review-run-now-btn" style="margin-top:var(--space-md);">Run Now</button>
+          </div>
         </div>
       </div>
 
@@ -641,12 +664,12 @@
           <span class="util-label">Visit Website</span>
         </a>
 
-        <!-- Settings placeholder — page to be built in a future phase -->
-        <button class="util-item util-item-disabled" title="Settings (coming soon)" aria-label="Settings" disabled>
+        <!-- System Settings — SUPER_ADMIN only; opens #page-system (Feature Toggles + Security Review Reminder) -->
+        <button class="util-item super-admin-only hidden" id="util-system-settings-btn" data-page="system" title="System Settings" aria-label="System Settings">
           <span class="util-icon">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </span>
-          <span class="util-label">Settings</span>
+          <span class="util-label">System Settings</span>
         </button>
         <!-- Future items (Notifications detail, Account, etc.) slot in here -->
       </nav>

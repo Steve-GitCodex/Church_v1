@@ -3,6 +3,7 @@ import { authenticate, requireMinRole, requireRole } from '../middleware/auth.js
 import {
   getAbout, updateAbout, getFeatures, updateFeatures,
   getSecurityReviewScheduleSetting, updateSecurityReviewScheduleSetting,
+  runSecurityReviewNow,
 } from '../controllers/site.js'
 
 const router = Router()
@@ -17,5 +18,8 @@ router.put('/features', authenticate, requireRole('SUPER_ADMIN', 'LEGEND'), upda
 // Security review reminder schedule — SUPER_ADMIN only, both read and write
 router.get('/security-review-schedule', authenticate, requireRole('SUPER_ADMIN', 'LEGEND'), getSecurityReviewScheduleSetting)
 router.put('/security-review-schedule', authenticate, requireRole('SUPER_ADMIN', 'LEGEND'), updateSecurityReviewScheduleSetting)
+
+// Immediate on-demand trigger — SUPER_ADMIN only; optional { to } targets one active Super Admin
+router.post('/security-review/run-now', authenticate, requireRole('SUPER_ADMIN', 'LEGEND'), runSecurityReviewNow)
 
 export default router

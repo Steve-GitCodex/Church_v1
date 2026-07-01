@@ -17,11 +17,19 @@ function toCronExpression({ dayOfMonth, hour }) {
   return `0 ${hour} ${dayOfMonth} * *`
 }
 
-export async function sendMonthlyReminder() {
+export async function sendMonthlyReminder({ to } = {}) {
+  const where = to
+    ? { role: 'SUPER_ADMIN', isActive: true, email: to }
+    : { role: 'SUPER_ADMIN', isActive: true }
+
   const superAdmins = await prisma.user.findMany({
-    where: { role: 'SUPER_ADMIN', isActive: true },
+    where,
     select: { id: true, email: true },
   })
+
+  if (to && superAdmins.length === 0) {
+    throw new Error('No active Super Admin found with that email')
+  }
 
   const title = 'Monthly security review due'
   const body = 'It\'s time for the scheduled monthly security review of the AIC Ruiru system. ' +
