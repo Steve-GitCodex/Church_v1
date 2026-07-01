@@ -7,6 +7,7 @@ import { createTestUser, tokenFor, cleanup } from './helpers.js'
 let adminToken, memberToken
 let adminEmail, memberEmail
 let _savedAbout  // original row value (if any) — restored in afterAll
+let _superAdminEmail
 
 beforeAll(async () => {
   // Preserve any live 'about' data so tests don't wipe it
@@ -85,6 +86,62 @@ describe('PUT /api/site/about', () => {
       .put('/api/site/about')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ ...payload, hero: { heading: '', subheading: '' } })
+      .expect(400)
+  })
+})
+
+describe('GET/PUT /api/site/security-review-schedule', () => {
+  let superAdminToken
+
+  beforeAll(async () => {
+    const superAdmin = await createTestUser({ role: 'SUPER_ADMIN' })
+    superAdminToken = (await tokenFor(superAdmin)).accessToken
+    _superAdminEmail = superAdmin.email
+  })
+
+  afterAll(async () => {
+    await prisma.siteSetting.deleteMany({ where: { key: 'security_review_schedule' } })
+    await cleanup(_superAdminEmail)
+  })
+
+  it('returns 401 without a token', async () => {
+    await request(app).get('/api/site/security-review-schedule').expect(401)
+  })
+
+  it('returns 403 for an ADMIN (SUPER_ADMIN only)', async () => {
+    await request(app)
+      .get('/api/site/security-review-schedule')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(403)
+  })
+
+  it('GET returns defaults when nothing is stored', async () => {
+    const res = await request(app)
+      .get('/api/site/security-review-schedule')
+      .set('Authorization', `Bearer ${superAdminToken}`)
+      .expect(200)
+    expect(res.body).toEqual({ enabled: true, dayOfMonth: 1, hour: 8 })
+  })
+
+  it('PUT saves the schedule as SUPER_ADMIN and GET returns it', async () => {
+    await request(app)
+      .put('/api/site/security-review-schedule')
+      .set('Authorization', `Bearer ${superAdminToken}`)
+      .send({ enabled: false, dayOfMonth: 15, hour: 3 })
+      .expect(200)
+
+    const res = await request(app)
+      .get('/api/site/security-review-schedule')
+      .set('Authorization', `Bearer ${superAdminToken}`)
+      .expect(200)
+    expect(res.body).toEqual({ enabled: false, dayOfMonth: 15, hour: 3 })
+  })
+
+  it('returns 400 for an out-of-range dayOfMonth', async () => {
+    await request(app)
+      .put('/api/site/security-review-schedule')
+      .set('Authorization', `Bearer ${superAdminToken}`)
+      .send({ enabled: true, dayOfMonth: 31, hour: 8 })
       .expect(400)
   })
 })

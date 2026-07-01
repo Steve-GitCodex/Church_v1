@@ -279,7 +279,10 @@ function applyPanelState(collapsed) {
   filterToggle.style.transform = collapsed ? 'rotate(180deg)' : ''
 }
 
-applyPanelState(localStorage.getItem(PANEL_KEY) === '1')
+// Respect an explicit prior choice; otherwise default collapsed on phones
+// so visitors land on results first instead of a filter panel blocking the feed.
+const storedPanelState = localStorage.getItem(PANEL_KEY)
+applyPanelState(storedPanelState !== null ? storedPanelState === '1' : window.innerWidth <= 768)
 
 filterToggle.addEventListener('click', () => {
   const collapsed = !filterPanel.classList.contains('collapsed')

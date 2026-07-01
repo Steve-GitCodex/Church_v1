@@ -5,6 +5,7 @@ import prisma from '../config/db.js'
 import { createOtp } from '../services/otp.js'
 import { sendPasswordResetEmail } from '../services/email.js'
 import { cacheGet, cacheSet, cacheInvalidate, cacheInvalidatePrefix } from '../services/cache.js'
+import { revokeAllUserRefreshTokens } from '../services/token.js'
 
 // Full include — for getMe and getMember (individual detail view)
 const profileInclude = {
@@ -186,11 +187,18 @@ export async function updateMe(req, res, next) {
   }
 }
 
+// Fields a member may request a change to. Church-record fields (membershipStatus,
+// householdId, baptismDate, dateJoined, photoUrl) are admin-only via updateMember.
+const REQUESTABLE_PROFILE_FIELDS = ['firstName', 'lastName', 'middleName', 'phone', 'address', 'dateOfBirth']
+
 // POST /api/members/me/request-update  (member requests a sensitive field change)
 export async function requestProfileUpdate(req, res, next) {
   try {
     const { field, proposedValue, reason } = req.body
     if (!field || !proposedValue) return res.status(400).json({ error: 'field and proposedValue are required' })
+    if (!REQUESTABLE_PROFILE_FIELDS.includes(field)) {
+      return res.status(400).json({ error: `field must be one of: ${REQUESTABLE_PROFILE_FIELDS.join(', ')}` })
+    }
 
     const profile = await prisma.memberProfile.findUnique({ where: { userId: req.user.userId } })
     if (!profile) return res.status(404).json({ error: 'Profile not found' })
@@ -254,6 +262,7 @@ export async function promoteMember(req, res, next) {
     }
 
     await prisma.user.update({ where: { id: targetId }, data: updateData })
+    await revokeAllUserRefreshTokens(targetId)
     invalidateMemberLists()
 
     const name = target.profile ? `${target.profile.firstName} ${target.profile.lastName}` : target.email
@@ -426,6 +435,9 @@ export async function approveUpdateRequest(req, res, next) {
     const request = await prisma.profileUpdateRequest.findUnique({ where: { id: req.params.id } })
     if (!request) return res.status(404).json({ error: 'Request not found' })
     if (request.status !== 'PENDING') return res.status(409).json({ error: 'Request is no longer pending' })
+    if (!REQUESTABLE_PROFILE_FIELDS.includes(request.field)) {
+      return res.status(400).json({ error: 'This request targets a field that can no longer be approved this way' })
+    }
 
     const profile = await prisma.memberProfile.findUnique({ where: { userId: request.requestedById } })
     if (!profile) return res.status(404).json({ error: 'Member profile not found' })

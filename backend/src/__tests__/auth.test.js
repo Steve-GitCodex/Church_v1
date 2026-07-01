@@ -57,6 +57,7 @@ describe('auth happy path', () => {
   it('POST /api/auth/verify-otp — 200 on correct code', async () => {
     const code = await getLatestOtp(userId)
     expect(code).toBeTruthy()
+    expect(code).toMatch(/^\d{6}$/)
     const res = await api.post('/api/auth/verify-otp').send({ userId, code })
     expect(res.status).toBe(200)
     expect(res.body.message).toMatch(/pending/i)

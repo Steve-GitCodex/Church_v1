@@ -154,12 +154,19 @@ export async function listContent(req, res, next) {
 
 export async function listManage(req, res, next) {
   try {
-    const { type, status, page = 1, limit = 20 } = req.query
+    const { type, status, category, from, to, q, page = 1, limit = 20 } = req.query
     const skip = (Number(page) - 1) * Number(limit)
 
     const where = {}
     if (type) where.type = type.toUpperCase()
     if (status) where.status = status.toUpperCase()
+    if (category) where.category = category
+    if (from || to) {
+      where.createdAt = {}
+      if (from) where.createdAt.gte = new Date(from)
+      if (to) where.createdAt.lte = new Date(to)
+    }
+    if (q) where.title = { contains: q, mode: 'insensitive' }
 
     const [total, items] = await Promise.all([
       prisma.content.count({ where }),

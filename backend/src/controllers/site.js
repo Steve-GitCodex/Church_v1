@@ -1,5 +1,10 @@
 import { z } from 'zod'
 import prisma from '../config/db.js'
+import {
+  SCHEDULE_KEY as SECURITY_SCHEDULE_KEY,
+  getSecurityReviewSchedule,
+  scheduleSecurityReviewReminder,
+} from '../services/securityReviewReminder.js'
 
 const ABOUT_KEY    = 'about'
 const FEATURES_KEY = 'givings_enabled'
@@ -112,4 +117,34 @@ export async function updateAbout(req, res, next) {
   } catch (err) {
     next(err)
   }
+}
+
+// ── Security review reminder schedule (SUPER_ADMIN) ─────────────
+
+export async function getSecurityReviewScheduleSetting(_req, res, next) {
+  try {
+    res.json(await getSecurityReviewSchedule())
+  } catch (err) { next(err) }
+}
+
+const ScheduleSchema = z.object({
+  enabled: z.boolean(),
+  dayOfMonth: z.number().int().min(1).max(28),
+  hour: z.number().int().min(0).max(23),
+})
+
+export async function updateSecurityReviewScheduleSetting(req, res, next) {
+  try {
+    const parsed = ScheduleSchema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Invalid schedule' })
+    }
+    await prisma.siteSetting.upsert({
+      where:  { key: SECURITY_SCHEDULE_KEY },
+      update: { value: parsed.data },
+      create: { key: SECURITY_SCHEDULE_KEY, value: parsed.data },
+    })
+    await scheduleSecurityReviewReminder()
+    res.json(parsed.data)
+  } catch (err) { next(err) }
 }

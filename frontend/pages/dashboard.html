@@ -195,6 +195,14 @@
           <h2 class="page-title-lg" style="margin-bottom:0">Giving Projects</h2>
           <button class="btn btn-primary btn-sm" onclick="openProjectModal(null)">+ New Project</button>
         </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <input class="form-input" type="search" id="project-search" placeholder="Search projects…" style="flex:1;min-width:200px;">
+          <select class="form-select" id="project-active-filter" style="width:auto;">
+            <option value="">All</option>
+            <option value="1">Active only</option>
+            <option value="0">Inactive only</option>
+          </select>
+        </div>
         <div class="table-card">
           <div id="projects-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
         </div>
@@ -205,6 +213,19 @@
           <h2 class="page-title-lg" style="margin-bottom:0">Pledges</h2>
           <button class="btn btn-primary btn-sm" onclick="openPledgeModal('admin')">+ New Pledge</button>
         </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-md);flex-wrap:wrap;align-items:center;">
+          <div class="member-search-wrap" style="width:200px;">
+            <input class="form-input" type="text" id="pledge-filter-member-search" placeholder="Filter by member…" autocomplete="off">
+            <div id="pledge-filter-member-results" class="member-search-dropdown hidden"></div>
+          </div>
+          <select class="form-select" id="pledge-project-filter" style="width:auto;"><option value="">All projects</option></select>
+          <select class="form-select" id="pledge-status-filter" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
         <div class="table-card">
           <div id="pledges-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
         </div>
@@ -212,6 +233,14 @@
 
         <div class="tab-panel" data-tab="corrections">
         <h2 class="page-title-lg">Correction Requests</h2>
+        <div style="margin-bottom:var(--space-lg);">
+          <select class="form-select" id="correction-status-filter" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
         <div class="table-card">
           <div id="correction-requests-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
         </div>
@@ -264,6 +293,35 @@
             </label>
           </div>
           <p class="form-hint" style="margin-top:var(--space-md)">Changes take effect immediately. When disabled, the Givings module is hidden for everyone — including admins.</p>
+        </div>
+
+        <div class="card" style="max-width:500px;margin-top:var(--space-lg);">
+          <h3 style="margin-bottom:var(--space-lg)">Monthly Security Review Reminder</h3>
+          <div class="feature-row">
+            <div>
+              <div class="feature-label">Enabled</div>
+              <div class="feature-desc">Notify all Super Admins in-app and by email on a recurring monthly schedule</div>
+            </div>
+            <label class="toggle-switch" title="Toggle monthly security review reminder">
+              <input type="checkbox" id="security-schedule-enabled-checkbox">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="feature-row">
+            <div>
+              <div class="feature-label">Day of month</div>
+              <div class="feature-desc">1–28, to stay valid across all months</div>
+            </div>
+            <select class="form-select" id="security-schedule-day" style="width:auto;"></select>
+          </div>
+          <div class="feature-row">
+            <div>
+              <div class="feature-label">Hour (24h, server time)</div>
+              <div class="feature-desc">When the reminder fires on the chosen day</div>
+            </div>
+            <select class="form-select" id="security-schedule-hour" style="width:auto;"></select>
+          </div>
+          <button class="btn btn-primary" id="security-schedule-save-btn" style="margin-top:var(--space-md);">Save Schedule</button>
         </div>
       </div>
 
@@ -372,6 +430,20 @@
           </div>
         </div>
 
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <input class="form-input" type="search" id="invite-search" placeholder="Search by email…" style="flex:1;min-width:200px;">
+          <select class="form-select" id="invite-type-filter" style="width:auto;">
+            <option value="">All types</option>
+            <option value="INDIVIDUAL">Individual</option>
+            <option value="MASS">Mass</option>
+          </select>
+          <select class="form-select" id="invite-status-filter" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="Active">Active</option>
+            <option value="Used">Used</option>
+            <option value="Expired">Expired</option>
+          </select>
+        </div>
         <div class="table-card">
           <div id="invites-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
         </div>
@@ -389,6 +461,9 @@
           <h2 class="page-title-lg" style="margin-bottom:0">Households</h2>
           <button class="btn btn-primary btn-sm" onclick="openHouseholdCreateModal()">+ New Household</button>
         </div>
+        <div style="margin-bottom:var(--space-lg);">
+          <input class="form-input" type="search" id="household-search" placeholder="Search households…" style="max-width:280px;">
+        </div>
         <div class="table-card">
           <div id="households-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
         </div>
@@ -398,6 +473,14 @@
         <div class="page-head">
           <h2 class="page-title-lg" style="margin-bottom:0">Ministries</h2>
           <button class="btn btn-primary btn-sm" onclick="openMinistryCreateModal()">+ New Ministry</button>
+        </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <input class="form-input" type="search" id="ministry-search" placeholder="Search ministries…" style="flex:1;min-width:200px;">
+          <select class="form-select" id="ministry-active-filter" style="width:auto;">
+            <option value="">All</option>
+            <option value="1">Active only</option>
+            <option value="0">Inactive only</option>
+          </select>
         </div>
         <div class="table-card">
           <div id="ministries-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
@@ -489,7 +572,7 @@
         </div>
 
         <!-- Status filter -->
-        <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-md);flex-wrap:wrap;">
           <span style="font-size:var(--font-size-sm);color:var(--color-text-muted);">Status:</span>
           <div class="seg-control seg-control-sm" id="content-status-seg">
             <button class="seg-btn active" data-value="">All</button>
@@ -498,6 +581,14 @@
             <button class="seg-btn" data-value="ARCHIVED">Archived</button>
           </div>
           <span id="content-admin-count" style="font-size:var(--font-size-sm);color:var(--color-text-muted);margin-left:auto;"></span>
+        </div>
+
+        <!-- Search / category / date filters -->
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;align-items:center;">
+          <input class="form-input" type="search" id="content-admin-search" placeholder="Search title…" style="flex:1;min-width:200px;">
+          <input class="form-input" type="text" id="content-admin-category-filter" placeholder="Category…" style="width:160px;">
+          <input class="form-input" type="date" id="content-admin-from-filter" title="From date" style="width:auto;">
+          <input class="form-input" type="date" id="content-admin-to-filter" title="To date" style="width:auto;">
         </div>
 
         <div class="table-card">

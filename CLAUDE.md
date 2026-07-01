@@ -123,6 +123,26 @@ backend/src/
 - 404 fallback: API paths → JSON `{"error":"Not found"}`; all other paths → `frontend/404.html`
   with HTTP 404 status via `res.status(404).sendFile(...)`.
 
+### Security Conventions
+
+Lessons from a 2026-07-01 security audit — do not reintroduce these patterns:
+
+- **Never build a Prisma `data: { [x]: y }` object from a user-supplied field name.** Always
+  whitelist the allowed keys explicitly (e.g. `REQUESTABLE_PROFILE_FIELDS` in `members.js`).
+  A dynamic key sourced from `req.body` can target any column on the model, including ones
+  that should require a separate admin-only code path (role, status, foreign keys).
+- **JWT `role`/`permissions` claims are a point-in-time snapshot.** Any code that re-issues
+  tokens (refresh) must re-derive claims from the current DB row, never from the token being
+  replaced — otherwise a demoted or deactivated user can keep refreshing with stale claims
+  indefinitely. Any admin action that changes a user's role, permissions, or active status
+  must call `revokeAllUserRefreshTokens(userId)` (`services/token.js`) so old refresh tokens
+  can't outlive the change.
+- **Use `crypto.randomInt`, never `Math.random`,** for OTPs, tokens, or anything
+  security-sensitive.
+- After a `/security-review` confirms a HIGH or MEDIUM finding, run
+  `npm run security:notify -- "<title>" "<summary>"` from `backend/` to alert every Super
+  Admin in-app and by email (`backend/scripts/notifySecurityAlert.js`).
+
 ---
 
 ## Testing

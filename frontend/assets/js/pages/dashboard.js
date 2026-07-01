@@ -709,45 +709,78 @@ document.querySelectorAll('.expiry-chip').forEach(chip => {
   })
 })
 
+let _invitesAll = []
+
+function inviteStatus(inv) {
+  const expired = inv.expiresAt && new Date(inv.expiresAt) < new Date()
+  const status  = inv.usedAt ? 'Used' : expired ? 'Expired' : 'Active'
+  const cls     = inv.usedAt ? 'badge-inactive' : expired ? 'badge-warning' : 'badge-active'
+  return { status, cls }
+}
+
 async function loadInvites() {
   const container = document.getElementById('invites-list')
   try {
     const res = await api.get('/auth/invites')
-    if (!res.invites.length) {
-      container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No invite links created yet.</p>'
-      return
-    }
-    container.innerHTML = `
-      <table class="table-stack">
-        <thead><tr><th>Type</th><th>Target</th><th>Expires</th><th>Status</th><th>Created</th><th></th></tr></thead>
-        <tbody>
-          ${res.invites.map(inv => {
-            const expired = inv.expiresAt && new Date(inv.expiresAt) < new Date()
-            const status  = inv.usedAt ? 'Used' : expired ? 'Expired' : 'Active'
-            const cls     = inv.usedAt ? 'badge-inactive' : expired ? 'badge-warning' : 'badge-active'
-            const link    = `${window.location.origin}/pages/register.html?invite=${inv.token}`
-            const canRevoke = !inv.usedAt
-            return `<tr>
-              <td data-label="Type">${inv.type === 'INDIVIDUAL' ? 'Individual' : 'Mass'}</td>
-              <td data-label="Target">${inv.targetEmail ? inv.targetEmail.replace(/(?<=.).(?=[^@]*@)/g, '*') : '—'}</td>
-              <td data-label="Expires">${inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString('en-KE') : '—'}</td>
-              <td data-label="Status"><span class="badge ${cls}">${status}</span></td>
-              <td data-label="Created">${new Date(inv.createdAt).toLocaleDateString('en-KE')}</td>
-              <td data-label="">
-                <div class="action-btns">
-                  <button class="btn btn-sm btn-outline" onclick="copyInviteLinkById('${inv.token}')">Copy Link</button>
-                  ${canRevoke ? `<button class="btn btn-sm btn-outline" style="color:var(--color-danger)" onclick="revokeInvite('${inv.id}', this)">Revoke</button>` : ''}
-                </div>
-              </td>
-            </tr>`
-          }).join('')}
-        </tbody>
-      </table>
-    `
+    _invitesAll = res.invites
+    renderInvitesList()
   } catch {
     container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load invites.</p>'
   }
 }
+
+function renderInvitesList() {
+  const container = document.getElementById('invites-list')
+  if (!_invitesAll.length) {
+    container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No invite links created yet.</p>'
+    return
+  }
+
+  const q      = document.getElementById('invite-search')?.value.trim().toLowerCase() || ''
+  const type   = document.getElementById('invite-type-filter')?.value || ''
+  const status = document.getElementById('invite-status-filter')?.value || ''
+
+  const invites = _invitesAll.filter(inv => {
+    if (type && inv.type !== type) return false
+    if (status && inviteStatus(inv).status !== status) return false
+    if (q && !(inv.targetEmail || '').toLowerCase().includes(q)) return false
+    return true
+  })
+
+  if (!invites.length) {
+    container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No invites match your filters.</p>'
+    return
+  }
+
+  container.innerHTML = `
+    <table class="table-stack">
+      <thead><tr><th>Type</th><th>Target</th><th>Expires</th><th>Status</th><th>Created</th><th></th></tr></thead>
+      <tbody>
+        ${invites.map(inv => {
+          const { status, cls } = inviteStatus(inv)
+          const canRevoke = !inv.usedAt
+          return `<tr>
+            <td data-label="Type">${inv.type === 'INDIVIDUAL' ? 'Individual' : 'Mass'}</td>
+            <td data-label="Target">${inv.targetEmail ? inv.targetEmail.replace(/(?<=.).(?=[^@]*@)/g, '*') : '—'}</td>
+            <td data-label="Expires">${inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString('en-KE') : '—'}</td>
+            <td data-label="Status"><span class="badge ${cls}">${status}</span></td>
+            <td data-label="Created">${new Date(inv.createdAt).toLocaleDateString('en-KE')}</td>
+            <td data-label="">
+              <div class="action-btns">
+                <button class="btn btn-sm btn-outline" onclick="copyInviteLinkById('${inv.token}')">Copy Link</button>
+                ${canRevoke ? `<button class="btn btn-sm btn-outline" style="color:var(--color-danger)" onclick="revokeInvite('${inv.id}', this)">Revoke</button>` : ''}
+              </div>
+            </td>
+          </tr>`
+        }).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+document.getElementById('invite-search')?.addEventListener('input', renderInvitesList)
+document.getElementById('invite-type-filter')?.addEventListener('change', renderInvitesList)
+document.getElementById('invite-status-filter')?.addEventListener('change', renderInvitesList)
 
 window.createInviteLink = async () => {
   const btn      = document.getElementById('invite-create-btn')
@@ -999,40 +1032,57 @@ document.getElementById('member-edit-modal').addEventListener('click', (e) => {
 })
 
 // ── Households ────────────────────────────────────────────────
+let _householdsAll = []
+
 async function loadHouseholds() {
   const container = document.getElementById('households-list')
   container.innerHTML = skeletonRows()
   try {
     const households = await api.get('/households')
-    if (!households.length) {
-      container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No households yet.</p>'
-      return
-    }
+    _householdsAll = households
     _householdsCache = new Map(households.map(h => [h.id, h]))
-    container.innerHTML = `
-      <table class="table-stack">
-        <thead><tr><th>Name</th><th>Members</th><th>Created</th><th></th></tr></thead>
-        <tbody>
-          ${households.map(h => `
-            <tr>
-              <td data-label="Name"><a href="#" style="color:var(--color-primary);text-decoration:none;" onclick="openHouseholdDetail('${h.id}');return false;">${escHtml(h.name)}</a></td>
-              <td data-label="Members">${h.memberCount}</td>
-              <td data-label="Created">${new Date(h.createdAt).toLocaleDateString('en-KE')}</td>
-              <td data-label="">
-                <div class="action-btns">
-                  <button class="btn btn-sm btn-outline" onclick="openHouseholdRenameModal('${h.id}')">Rename</button>
-                  <button class="btn btn-sm btn-outline" onclick="deleteHousehold('${h.id}')">Delete</button>
-                </div>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `
+    renderHouseholdsList()
   } catch {
     container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load households.</p>'
   }
 }
+
+function renderHouseholdsList() {
+  const container = document.getElementById('households-list')
+  const q = document.getElementById('household-search')?.value.trim().toLowerCase() || ''
+  const households = q ? _householdsAll.filter(h => h.name.toLowerCase().includes(q)) : _householdsAll
+
+  if (!_householdsAll.length) {
+    container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No households yet.</p>'
+    return
+  }
+  if (!households.length) {
+    container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No households match your search.</p>'
+    return
+  }
+  container.innerHTML = `
+    <table class="table-stack">
+      <thead><tr><th>Name</th><th>Members</th><th>Created</th><th></th></tr></thead>
+      <tbody>
+        ${households.map(h => `
+          <tr>
+            <td data-label="Name"><a href="#" style="color:var(--color-primary);text-decoration:none;" onclick="openHouseholdDetail('${h.id}');return false;">${escHtml(h.name)}</a></td>
+            <td data-label="Members">${h.memberCount}</td>
+            <td data-label="Created">${new Date(h.createdAt).toLocaleDateString('en-KE')}</td>
+            <td data-label="">
+              <div class="action-btns">
+                <button class="btn btn-sm btn-outline" onclick="openHouseholdRenameModal('${h.id}')">Rename</button>
+                <button class="btn btn-sm btn-outline" onclick="deleteHousehold('${h.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+document.getElementById('household-search')?.addEventListener('input', renderHouseholdsList)
 
 window.openHouseholdCreateModal = () => {
   _householdModalId = null
@@ -1237,6 +1287,17 @@ async function loadMinistries() {
   }
 }
 
+function getFilteredMinistries() {
+  const q      = document.getElementById('ministry-search')?.value.trim().toLowerCase() || ''
+  const active = document.getElementById('ministry-active-filter')?.value || ''
+  return _ministriesAll.filter(m => {
+    if (active === '1' && !m.isActive) return false
+    if (active === '0' && m.isActive) return false
+    if (q && !m.name.toLowerCase().includes(q) && !(m.description || '').toLowerCase().includes(q)) return false
+    return true
+  })
+}
+
 function renderMinistriesPage() {
   const container  = document.getElementById('ministries-list')
   const pagination = document.getElementById('ministries-pagination')
@@ -1245,9 +1306,15 @@ function renderMinistriesPage() {
     pagination.classList.add('hidden')
     return
   }
-  const totalPages = Math.ceil(_ministriesAll.length / MINISTRIES_PER_PAGE)
+  const filtered = getFilteredMinistries()
+  if (!filtered.length) {
+    container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No ministries match your filters.</p>'
+    pagination.classList.add('hidden')
+    return
+  }
+  const totalPages = Math.ceil(filtered.length / MINISTRIES_PER_PAGE)
   _ministriesPage  = Math.min(_ministriesPage, totalPages)
-  const slice = _ministriesAll.slice((_ministriesPage - 1) * MINISTRIES_PER_PAGE, _ministriesPage * MINISTRIES_PER_PAGE)
+  const slice = filtered.slice((_ministriesPage - 1) * MINISTRIES_PER_PAGE, _ministriesPage * MINISTRIES_PER_PAGE)
   container.innerHTML = `
     <table class="table-stack">
       <thead><tr><th>Name</th><th>Description</th><th>Members</th><th>Active</th><th></th></tr></thead>
@@ -1272,7 +1339,7 @@ function renderMinistriesPage() {
   `
   if (totalPages > 1) {
     pagination.classList.remove('hidden')
-    document.getElementById('ministries-page-info').textContent = `Page ${_ministriesPage} of ${totalPages} (${_ministriesAll.length} ministries)`
+    document.getElementById('ministries-page-info').textContent = `Page ${_ministriesPage} of ${totalPages} (${filtered.length} ministries)`
     document.getElementById('ministries-prev-btn').disabled = _ministriesPage <= 1
     document.getElementById('ministries-next-btn').disabled = _ministriesPage >= totalPages
   } else {
@@ -1284,6 +1351,15 @@ window.goMinistriesPage = (delta) => {
   _ministriesPage += delta
   renderMinistriesPage()
 }
+
+document.getElementById('ministry-search')?.addEventListener('input', () => {
+  _ministriesPage = 1
+  renderMinistriesPage()
+})
+document.getElementById('ministry-active-filter')?.addEventListener('change', () => {
+  _ministriesPage = 1
+  renderMinistriesPage()
+})
 
 window.openMinistryCreateModal = () => {
   _ministryModalId = null
@@ -1995,6 +2071,7 @@ document.getElementById('news-detail-modal').addEventListener('click', (e) => {
 
 let _contentAdminTypeFilter   = ''
 let _contentAdminStatusFilter = ''
+let _contentAdminFilterTimer  = null
 
 // Wire segmented controls
 ;(function wireContentSegments() {
@@ -2014,6 +2091,16 @@ let _contentAdminStatusFilter = ''
     _contentAdminStatusFilter = btn.dataset.value
     loadContentAdmin(1)
   })
+  document.getElementById('content-admin-search')?.addEventListener('input', () => {
+    clearTimeout(_contentAdminFilterTimer)
+    _contentAdminFilterTimer = setTimeout(() => loadContentAdmin(1), 400)
+  })
+  ;['content-admin-category-filter', 'content-admin-from-filter', 'content-admin-to-filter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      clearTimeout(_contentAdminFilterTimer)
+      _contentAdminFilterTimer = setTimeout(() => loadContentAdmin(1), 400)
+    })
+  })
 }())
 
 async function loadContentAdmin(page = 1, append = false) {
@@ -2027,6 +2114,14 @@ async function loadContentAdmin(page = 1, append = false) {
     const params = new URLSearchParams({ limit: '20', page: String(page) })
     if (_contentAdminTypeFilter)   params.append('type', _contentAdminTypeFilter)
     if (_contentAdminStatusFilter) params.append('status', _contentAdminStatusFilter)
+    const q        = document.getElementById('content-admin-search')?.value.trim()
+    const category = document.getElementById('content-admin-category-filter')?.value.trim()
+    const from     = document.getElementById('content-admin-from-filter')?.value
+    const to       = document.getElementById('content-admin-to-filter')?.value
+    if (q)        params.append('q', q)
+    if (category) params.append('category', category)
+    if (from)     params.append('from', new Date(from).toISOString())
+    if (to)       params.append('to', new Date(to + 'T23:59:59').toISOString())
 
     const res = await api.get('/content/manage?' + params.toString())
 
@@ -2951,13 +3046,31 @@ async function loadMyPledges() {
   }
 }
 
+let _pledgeFilterMemberId = ''
+let _pledgeSlimMembers    = []
+
 async function loadPledgesAdmin() {
   const el = document.getElementById('pledges-list')
   el.innerHTML = skeletonRows()
   try {
-    const res = await api.get('/givings/pledges')
+    // Populate project filter on first load
+    const projectSel = document.getElementById('pledge-project-filter')
+    if (projectSel && projectSel.options.length <= 1) {
+      const projects = await api.get('/givings/projects')
+      projectSel.innerHTML = '<option value="">All projects</option>' +
+        projects.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('')
+    }
+
+    const params = new URLSearchParams()
+    if (_pledgeFilterMemberId)                                       params.append('memberId', _pledgeFilterMemberId)
+    if (document.getElementById('pledge-project-filter')?.value)     params.append('projectId', document.getElementById('pledge-project-filter').value)
+    if (document.getElementById('pledge-status-filter')?.value)      params.append('status', document.getElementById('pledge-status-filter').value)
+
+    const res = await api.get('/givings/pledges?' + params.toString())
     if (!res.pledges.length) {
-      el.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No pledges yet.</p>'
+      el.innerHTML = params.toString()
+        ? '<p class="text-muted" style="padding:var(--space-lg)">No pledges match your filters.</p>'
+        : '<p class="text-muted" style="padding:var(--space-lg)">No pledges yet.</p>'
       return
     }
     el.innerHTML = `
@@ -2982,6 +3095,52 @@ async function loadPledgesAdmin() {
     el.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load pledges.</p>'
   }
 }
+
+// Pledge filter listeners
+;['pledge-project-filter', 'pledge-status-filter'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', () => loadPledgesAdmin())
+})
+
+// Pledge filter member search picker
+function renderPledgeMemberFilterSearch(query) {
+  const resultsEl = document.getElementById('pledge-filter-member-results')
+  if (!_pledgeSlimMembers.length) { resultsEl.classList.add('hidden'); return }
+  const q = query.toLowerCase()
+  const matches = q
+    ? _pledgeSlimMembers.filter(m => m.fullName.toLowerCase().includes(q)).slice(0, 20)
+    : _pledgeSlimMembers.slice(0, 20)
+  if (!matches.length) { resultsEl.classList.add('hidden'); return }
+  resultsEl.innerHTML = matches.map(m =>
+    `<div class="msd-item" data-profile-id="${m.profileId}" data-name="${escHtml(m.fullName)}">${escHtml(m.fullName)}</div>`
+  ).join('')
+  resultsEl.classList.remove('hidden')
+}
+
+document.getElementById('pledge-filter-member-search')?.addEventListener('focus', e => {
+  if (!_pledgeSlimMembers.length) {
+    api.get('/members/slim').then(data => { _pledgeSlimMembers = data; renderPledgeMemberFilterSearch(e.target.value.trim()) }).catch(() => {})
+  } else {
+    renderPledgeMemberFilterSearch(e.target.value.trim())
+  }
+})
+document.getElementById('pledge-filter-member-search')?.addEventListener('input', e => renderPledgeMemberFilterSearch(e.target.value.trim()))
+document.getElementById('pledge-filter-member-results')?.addEventListener('click', e => {
+  const item = e.target.closest('.msd-item')
+  if (!item) return
+  _pledgeFilterMemberId = item.dataset.profileId
+  document.getElementById('pledge-filter-member-search').value = item.dataset.name
+  document.getElementById('pledge-filter-member-results').classList.add('hidden')
+  loadPledgesAdmin()
+})
+document.getElementById('pledge-filter-member-search')?.addEventListener('blur', () => {
+  setTimeout(() => {
+    document.getElementById('pledge-filter-member-results')?.classList.add('hidden')
+    if (!document.getElementById('pledge-filter-member-search').value.trim() && _pledgeFilterMemberId) {
+      _pledgeFilterMemberId = ''
+      loadPledgesAdmin()
+    }
+  }, 150)
+})
 
 window.cancelPledge = async (id, isAdmin = false) => {
   const ok = await confirmDialog({ title: 'Cancel this pledge?', message: 'The pledge will be marked cancelled.', confirmText: 'Cancel pledge', danger: true })
@@ -3442,43 +3601,70 @@ document.getElementById('giving-modal').addEventListener('click', e => {
 let _projectsCache = new Map()
 let _projectEditId = null
 
+let _projectsAll = []
+
 async function loadGivingProjects() {
   const listEl = document.getElementById('projects-list')
   listEl.innerHTML = skeletonRows()
   try {
     const projects = await api.get('/givings/projects')
+    _projectsAll   = projects
     _projectsCache = new Map(projects.map(p => [p.id, p]))
-    if (!projects.length) {
-      listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No projects yet.</p>'
-      return
-    }
-    listEl.innerHTML = `
-      <table class="table-stack">
-        <thead><tr><th>Name</th><th>Description</th><th>Target</th><th>Raised</th><th>Records</th><th>Active</th><th></th></tr></thead>
-        <tbody>
-          ${projects.map(p => `
-            <tr>
-              <td data-label="Name">${escHtml(p.name)}</td>
-              <td data-label="Description">${p.description ? escHtml(p.description) : '—'}</td>
-              <td data-label="Target">${p.targetAmount ? fmtKES(p.targetAmount) : '—'}</td>
-              <td data-label="Raised">${fmtKES(p.totalRaised)}</td>
-              <td data-label="Records">${p.givingCount}</td>
-              <td data-label="Active">${p.isActive ? '<span class="badge badge-active">Yes</span>' : '<span class="badge badge-inactive">No</span>'}</td>
-              <td data-label="">
-                <div class="action-btns">
-                  <button class="btn btn-sm btn-outline" onclick="openProjectModal('${p.id}')">Edit</button>
-                  ${p.isActive ? `<button class="btn btn-sm btn-outline" onclick="deactivateProject('${p.id}')">Deactivate</button>` : ''}
-                </div>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `
+    renderGivingProjectsList()
   } catch {
     listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load projects.</p>'
   }
 }
+
+function renderGivingProjectsList() {
+  const listEl = document.getElementById('projects-list')
+  if (!_projectsAll.length) {
+    listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No projects yet.</p>'
+    return
+  }
+
+  const q      = document.getElementById('project-search')?.value.trim().toLowerCase() || ''
+  const active = document.getElementById('project-active-filter')?.value || ''
+
+  const projects = _projectsAll.filter(p => {
+    if (active === '1' && !p.isActive) return false
+    if (active === '0' && p.isActive) return false
+    if (q && !p.name.toLowerCase().includes(q) && !(p.description || '').toLowerCase().includes(q)) return false
+    return true
+  })
+
+  if (!projects.length) {
+    listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No projects match your filters.</p>'
+    return
+  }
+
+  listEl.innerHTML = `
+    <table class="table-stack">
+      <thead><tr><th>Name</th><th>Description</th><th>Target</th><th>Raised</th><th>Records</th><th>Active</th><th></th></tr></thead>
+      <tbody>
+        ${projects.map(p => `
+          <tr>
+            <td data-label="Name">${escHtml(p.name)}</td>
+            <td data-label="Description">${p.description ? escHtml(p.description) : '—'}</td>
+            <td data-label="Target">${p.targetAmount ? fmtKES(p.targetAmount) : '—'}</td>
+            <td data-label="Raised">${fmtKES(p.totalRaised)}</td>
+            <td data-label="Records">${p.givingCount}</td>
+            <td data-label="Active">${p.isActive ? '<span class="badge badge-active">Yes</span>' : '<span class="badge badge-inactive">No</span>'}</td>
+            <td data-label="">
+              <div class="action-btns">
+                <button class="btn btn-sm btn-outline" onclick="openProjectModal('${p.id}')">Edit</button>
+                ${p.isActive ? `<button class="btn btn-sm btn-outline" onclick="deactivateProject('${p.id}')">Deactivate</button>` : ''}
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+document.getElementById('project-search')?.addEventListener('input', renderGivingProjectsList)
+document.getElementById('project-active-filter')?.addEventListener('change', renderGivingProjectsList)
 
 window.openProjectModal = (id) => {
   _projectEditId = id
@@ -3562,51 +3748,71 @@ document.getElementById('project-modal').addEventListener('click', e => {
 
 let _correctionReviewId = null
 
+let _correctionRequestsAll = []
+
+function correctionStatusBadge(s) {
+  const cls = s === 'APPROVED' ? 'badge-active' : s === 'REJECTED' ? 'badge-inactive' : 'badge-warning'
+  return `<span class="badge ${cls}">${s.charAt(0) + s.slice(1).toLowerCase()}</span>`
+}
+
 async function loadCorrectionRequests() {
   const listEl = document.getElementById('correction-requests-list')
   listEl.innerHTML = skeletonRows()
   try {
     const res = await api.get('/givings/requests')
+    _correctionRequestsAll = res.requests
     const pending = res.requests.filter(r => r.status === 'PENDING').length
     setRailBadge('giving-requests-badge', pending)
     setRailBadge('givings-badge', pending)
-    if (!res.requests.length) {
-      listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No correction requests.</p>'
-      return
-    }
-    const statusBadge = s => {
-      const cls = s === 'APPROVED' ? 'badge-active' : s === 'REJECTED' ? 'badge-inactive' : 'badge-warning'
-      return `<span class="badge ${cls}">${s.charAt(0) + s.slice(1).toLowerCase()}</span>`
-    }
-    listEl.innerHTML = `
-      <table class="table-stack">
-        <thead><tr><th>Requester</th><th>Giving</th><th>Proposed</th><th>Status</th><th>Date</th><th></th></tr></thead>
-        <tbody>
-          ${res.requests.map(r => {
-            const proposed = r.proposedData || {}
-            const proposedStr = Object.entries(proposed)
-              .map(([k, v]) => `${k}: ${k === 'amount' ? fmtKES(v) : v}`)
-              .join(', ') || '—'
-            return `
-              <tr>
-                <td data-label="Requester">${escHtml(r.requester.name)}</td>
-                <td data-label="Giving">${r.giving ? `${fmtKES(r.giving.amount)} · ${escHtml(r.giving.projectName || '—')}` : '—'}</td>
-                <td data-label="Proposed" style="font-size:var(--font-size-sm);">${escHtml(proposedStr)}</td>
-                <td data-label="Status">${statusBadge(r.status)}</td>
-                <td data-label="Date" style="white-space:nowrap;">${new Date(r.createdAt).toLocaleDateString('en-KE')}</td>
-                <td data-label="">
-                  ${r.status === 'PENDING' ? `<button class="btn btn-sm btn-outline" onclick="openCorrectionReviewModal('${r.id}')">Review</button>` : ''}
-                </td>
-              </tr>
-            `
-          }).join('')}
-        </tbody>
-      </table>
-    `
+    renderCorrectionRequestsList()
   } catch {
     listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">Failed to load requests.</p>'
   }
 }
+
+function renderCorrectionRequestsList() {
+  const listEl = document.getElementById('correction-requests-list')
+  if (!_correctionRequestsAll.length) {
+    listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No correction requests.</p>'
+    return
+  }
+
+  const status = document.getElementById('correction-status-filter')?.value || ''
+  const requests = status ? _correctionRequestsAll.filter(r => r.status === status) : _correctionRequestsAll
+
+  if (!requests.length) {
+    listEl.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No requests match this filter.</p>'
+    return
+  }
+
+  listEl.innerHTML = `
+    <table class="table-stack">
+      <thead><tr><th>Requester</th><th>Giving</th><th>Proposed</th><th>Status</th><th>Date</th><th></th></tr></thead>
+      <tbody>
+        ${requests.map(r => {
+          const proposed = r.proposedData || {}
+          const proposedStr = Object.entries(proposed)
+            .map(([k, v]) => `${k}: ${k === 'amount' ? fmtKES(v) : v}`)
+            .join(', ') || '—'
+          return `
+            <tr>
+              <td data-label="Requester">${escHtml(r.requester.name)}</td>
+              <td data-label="Giving">${r.giving ? `${fmtKES(r.giving.amount)} · ${escHtml(r.giving.projectName || '—')}` : '—'}</td>
+              <td data-label="Proposed" style="font-size:var(--font-size-sm);">${escHtml(proposedStr)}</td>
+              <td data-label="Status">${correctionStatusBadge(r.status)}</td>
+              <td data-label="Date" style="white-space:nowrap;">${new Date(r.createdAt).toLocaleDateString('en-KE')}</td>
+              <td data-label="">
+                ${r.status === 'PENDING' ? `<button class="btn btn-sm btn-outline" onclick="openCorrectionReviewModal('${r.id}')">Review</button>` : ''}
+              </td>
+            </tr>
+          `
+        }).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+document.getElementById('correction-status-filter')?.addEventListener('change', renderCorrectionRequestsList)
 
 window.openCorrectionReviewModal = async (id) => {
   _correctionReviewId = id
@@ -3690,6 +3896,49 @@ async function loadSystemSettings() {
     }
   } catch {
     toast('Failed to load settings', 'danger')
+  }
+  loadSecurityReviewSchedule()
+}
+
+async function loadSecurityReviewSchedule() {
+  const enabledCheckbox = document.getElementById('security-schedule-enabled-checkbox')
+  const daySelect  = document.getElementById('security-schedule-day')
+  const hourSelect = document.getElementById('security-schedule-hour')
+  const saveBtn    = document.getElementById('security-schedule-save-btn')
+  if (!enabledCheckbox || !daySelect || !hourSelect) return
+
+  if (!daySelect.options.length) {
+    for (let d = 1; d <= 28; d++) daySelect.add(new Option(String(d), String(d)))
+  }
+  if (!hourSelect.options.length) {
+    for (let h = 0; h < 24; h++) hourSelect.add(new Option(`${String(h).padStart(2, '0')}:00`, String(h)))
+  }
+
+  try {
+    const schedule = await api.get('/site/security-review-schedule')
+    enabledCheckbox.checked = schedule.enabled
+    daySelect.value  = String(schedule.dayOfMonth)
+    hourSelect.value = String(schedule.hour)
+    if (saveBtn) saveBtn.onclick = saveSecurityReviewSchedule
+  } catch {
+    toast('Failed to load security review schedule', 'danger')
+  }
+}
+
+async function saveSecurityReviewSchedule() {
+  const enabledCheckbox = document.getElementById('security-schedule-enabled-checkbox')
+  const daySelect  = document.getElementById('security-schedule-day')
+  const hourSelect = document.getElementById('security-schedule-hour')
+  const payload = {
+    enabled: enabledCheckbox?.checked ?? true,
+    dayOfMonth: Number(daySelect?.value ?? 1),
+    hour: Number(hourSelect?.value ?? 8),
+  }
+  try {
+    await api.put('/site/security-review-schedule', payload)
+    toast('Security review schedule saved', 'success')
+  } catch (err) {
+    toast(err.message || 'Failed to save schedule', 'danger')
   }
 }
 

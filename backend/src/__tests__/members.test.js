@@ -106,6 +106,79 @@ describe('POST /api/members/:id/promote — role guards', () => {
   })
 })
 
+// ── Promote / deactivate revoke outstanding refresh tokens ─────────────────────
+
+describe('role changes revoke outstanding refresh tokens', () => {
+  let admin, adminToken
+
+  beforeAll(async () => {
+    admin = await createTestUser({ role: 'ADMIN', firstName: 'Revoke', lastName: 'Admin' })
+    ;({ accessToken: adminToken } = await tokenFor(admin))
+  })
+
+  afterAll(() => cleanup(admin.email))
+
+  it('promoting a member invalidates their existing refresh token', async () => {
+    const member = await createTestUser({ role: 'MEMBER', firstName: 'Stale', lastName: 'Role' })
+    const { refreshToken } = await tokenFor(member)
+
+    const promoteRes = await api
+      .post(`/api/members/${member.id}/promote`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ role: 'STAFF', permissions: {} })
+    expect(promoteRes.status).toBe(200)
+
+    const refreshRes = await api.post('/api/auth/refresh').send({ refreshToken })
+    expect(refreshRes.status).toBe(401)
+
+    await cleanup(member.email)
+  })
+
+  it('deactivating a member invalidates their existing refresh token', async () => {
+    const member = await createTestUser({ role: 'MEMBER', firstName: 'Locked', lastName: 'Out' })
+    const { refreshToken } = await tokenFor(member)
+
+    const deactivateRes = await api
+      .post(`/api/members/${member.id}/deactivate`)
+      .set('Authorization', `Bearer ${adminToken}`)
+    expect(deactivateRes.status).toBe(200)
+
+    const refreshRes = await api.post('/api/auth/refresh').send({ refreshToken })
+    expect(refreshRes.status).toBe(401)
+
+    await cleanup(member.email)
+  })
+})
+
+// ── Profile update requests — field whitelist ───────────────────────────────────
+
+describe('POST /api/members/me/request-update — field whitelist', () => {
+  let member, memberToken
+
+  beforeAll(async () => {
+    member = await createTestUser({ role: 'MEMBER', firstName: 'Update', lastName: 'Requester' })
+    ;({ accessToken: memberToken } = await tokenFor(member))
+  })
+
+  afterAll(() => cleanup(member.email))
+
+  it('rejects a request for a non-whitelisted field', async () => {
+    const res = await api
+      .post('/api/members/me/request-update')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ field: 'membershipStatus', proposedValue: 'ACTIVE', reason: 'please' })
+    expect(res.status).toBe(400)
+  })
+
+  it('accepts a request for a whitelisted field', async () => {
+    const res = await api
+      .post('/api/members/me/request-update')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ field: 'phone', proposedValue: '+254700000000', reason: 'new number' })
+    expect(res.status).toBe(201)
+  })
+})
+
 // ── Admin direct-create member ────────────────────────────────────────────────
 
 describe('POST /api/members — admin direct-create', () => {

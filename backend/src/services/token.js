@@ -27,16 +27,30 @@ export async function revokeRefreshToken(token) {
   await prisma.refreshToken.deleteMany({ where: { token } })
 }
 
+export async function revokeAllUserRefreshTokens(userId) {
+  await prisma.refreshToken.deleteMany({ where: { userId } })
+}
+
 export async function rotateRefreshToken(oldToken) {
   const record = await prisma.refreshToken.findUnique({ where: { token: oldToken } })
   if (!record || record.expiresAt < new Date()) return null
 
-  const payload = verifyRefreshToken(oldToken)
-  const newAccessToken = signAccessToken({ userId: payload.userId, role: payload.role })
-  const newRefreshToken = signRefreshToken({ userId: payload.userId, role: payload.role })
+  verifyRefreshToken(oldToken)
+
+  // Re-derive claims from the current DB state, not the token being replaced —
+  // otherwise a demoted/deactivated user could keep refreshing with stale role/permissions.
+  const user = await prisma.user.findUnique({ where: { id: record.userId } })
+  if (!user || !user.isActive) {
+    await prisma.refreshToken.deleteMany({ where: { token: oldToken } })
+    return null
+  }
+
+  const payload = { userId: user.id, role: user.role, permissions: user.permissions || {} }
+  const newAccessToken = signAccessToken(payload)
+  const newRefreshToken = signRefreshToken(payload)
 
   await prisma.refreshToken.deleteMany({ where: { token: oldToken } })
-  await saveRefreshToken(record.userId, newRefreshToken)
+  await saveRefreshToken(user.id, newRefreshToken)
 
   return { accessToken: newAccessToken, refreshToken: newRefreshToken }
 }

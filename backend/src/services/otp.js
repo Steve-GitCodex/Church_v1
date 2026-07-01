@@ -1,9 +1,10 @@
+import { randomInt } from 'crypto'
 import prisma from '../config/db.js'
 
 const OTP_TTL_MINUTES = 10
 
 export function generateOtpCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  return randomInt(100000, 1000000).toString()
 }
 
 export async function createOtp(userId, purpose) {

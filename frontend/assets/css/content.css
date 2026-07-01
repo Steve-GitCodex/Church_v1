@@ -35,6 +35,11 @@
   .content-page-layout {
     grid-template-columns: 1fr;
   }
+  /* Full-width panel would otherwise pin itself across most of the
+     screen while scrolling — let it scroll away with the page instead. */
+  .filter-panel {
+    position: static;
+  }
 }
 
 /* ── Filter panel ────────────────────────────────────────── */
