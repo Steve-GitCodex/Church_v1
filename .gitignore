@@ -6,6 +6,7 @@ dist/
 build/
 .DS_Store
 Thumbs.db
+.playwright-cli/
 
 # Internal docs — never commit
 SETUP.md
@@ -15,3 +16,4 @@ PHASES.md
 backend/uploads/*
 !backend/uploads/.gitkeep
 Church_v1.code-workspace
+frontend/assets/exampleIcons/

@@ -72,16 +72,7 @@ export async function loadNews(page = 1, append = false) {
 
 window.loadMoreNews = () => loadNews(_newsPage + 1, true)
 
-;['news-type-filter', 'news-unseen-filter'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', () => loadNews(1))
-})
 let _newsFilterTimer = null
-;['news-category-filter', 'news-from-filter', 'news-to-filter'].forEach(id => {
-  document.getElementById(id)?.addEventListener('input', () => {
-    clearTimeout(_newsFilterTimer)
-    _newsFilterTimer = setTimeout(() => loadNews(1), 400)
-  })
-})
 
 // ── Events section ────────────────────────────────────────────
 
@@ -125,15 +116,28 @@ export async function loadEvents(page = 1, append = false) {
 window.loadMoreEvents = () => loadEvents(_eventsPage + 1, true)
 
 let _eventsFilterTimer = null
-;['events-unseen-filter'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', () => loadEvents(1))
-})
-;['events-category-filter', 'events-from-filter', 'events-to-filter'].forEach(id => {
-  document.getElementById(id)?.addEventListener('input', () => {
-    clearTimeout(_eventsFilterTimer)
-    _eventsFilterTimer = setTimeout(() => loadEvents(1), 400)
+
+// Wires the news/events tab-panels — called once, right after updates.html is injected.
+export function wireUpdatesPanel() {
+  ;['news-type-filter', 'news-unseen-filter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => loadNews(1))
   })
-})
+  ;['news-category-filter', 'news-from-filter', 'news-to-filter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      clearTimeout(_newsFilterTimer)
+      _newsFilterTimer = setTimeout(() => loadNews(1), 400)
+    })
+  })
+  ;['events-unseen-filter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => loadEvents(1))
+  })
+  ;['events-category-filter', 'events-from-filter', 'events-to-filter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      clearTimeout(_eventsFilterTimer)
+      _eventsFilterTimer = setTimeout(() => loadEvents(1), 400)
+    })
+  })
+}
 
 // ── Content card renderer (shared news + events member view) ──
 
@@ -284,8 +288,8 @@ let _contentAdminTypeFilter   = ''
 let _contentAdminStatusFilter = ''
 let _contentAdminFilterTimer  = null
 
-// Wire segmented controls
-;(function wireContentSegments() {
+// Wires the content (posts) tab-panel — called once, right after content.html is injected.
+export function wireContentPanel() {
   document.getElementById('content-type-seg')?.addEventListener('click', e => {
     const btn = e.target.closest('.seg-btn')
     if (!btn) return
@@ -312,7 +316,7 @@ let _contentAdminFilterTimer  = null
       _contentAdminFilterTimer = setTimeout(() => loadContentAdmin(1), 400)
     })
   })
-}())
+}
 
 export async function loadContentAdmin(page = 1, append = false) {
   _contentAdminPage = page

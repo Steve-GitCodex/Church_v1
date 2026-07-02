@@ -1,0 +1,65 @@
+        <h2 class="page-title-lg">Invite Links</h2>
+
+        <div class="card" style="margin-bottom:var(--space-xl)">
+          <h3 style="margin-bottom:var(--space-lg)">Create Invite</h3>
+          <div id="invite-alert" class="hidden"></div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <div style="display:flex;gap:var(--space-md);">
+              <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;">
+                <input type="radio" name="invite-type" value="INDIVIDUAL" checked> Individual (auto-approved)
+              </label>
+              <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;">
+                <input type="radio" name="invite-type" value="MASS"> Mass (standard approval)
+              </label>
+            </div>
+          </div>
+          <div class="form-group" id="invite-email-group">
+            <label class="form-label" for="invite-email">Invitee email</label>
+            <input class="form-input" type="email" id="invite-email" placeholder="person@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expires in</label>
+            <div style="display:flex;gap:var(--space-xs);flex-wrap:wrap;" id="expiry-quick">
+              <button type="button" class="expiry-chip" data-minutes="60">1 hour</button>
+              <button type="button" class="expiry-chip" data-minutes="360">6 hours</button>
+              <button type="button" class="expiry-chip" data-minutes="720">12 hours</button>
+              <button type="button" class="expiry-chip active" data-minutes="1440">1 day</button>
+              <button type="button" class="expiry-chip" data-minutes="4320">3 days</button>
+              <button type="button" class="expiry-chip" data-minutes="10080">7 days</button>
+              <button type="button" class="expiry-chip" data-minutes="20160">14 days</button>
+              <button type="button" class="expiry-chip" data-minutes="43200">30 days</button>
+              <button type="button" class="expiry-chip" data-minutes="custom">Custom…</button>
+            </div>
+            <div id="expiry-custom" style="display:none;margin-top:var(--space-sm);">
+              <input type="datetime-local" class="form-input" id="invite-expiry-date">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="invite-create-btn" onclick="createInviteLink()">Generate Link</button>
+
+          <div id="invite-result" class="hidden" style="margin-top:var(--space-lg);">
+            <label class="form-label">Invite link</label>
+            <div style="display:flex;gap:var(--space-sm);">
+              <input class="form-input" type="text" id="invite-link-output" readonly style="flex:1;font-size:var(--font-size-sm);">
+              <button class="btn btn-outline btn-sm" onclick="copyInviteLink()">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <input class="form-input" type="search" id="invite-search" placeholder="Search by email…" style="flex:1;min-width:200px;">
+          <select class="form-select" id="invite-type-filter" style="width:auto;">
+            <option value="">All types</option>
+            <option value="INDIVIDUAL">Individual</option>
+            <option value="MASS">Mass</option>
+          </select>
+          <select class="form-select" id="invite-status-filter" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="Active">Active</option>
+            <option value="Used">Used</option>
+            <option value="Expired">Expired</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div id="invites-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>

@@ -162,13 +162,47 @@ export async function init({ loadDashboardStats, loadPendingCount, loadUpdateReq
   }
 }
 
+// ── Lazy-loaded page/tab partials ──────────────────────────────
+// Each domain page's heavy tab-panel markup lives in pages/dashboard/*.html,
+// fetched once and injected into an empty container left in the dashboard.html shell.
+// The matching dashboard/*.js module supplies a `wire()` callback that attaches the
+// listeners it previously attached at module-load time (now the DOM exists on demand).
+const _loadedPartials  = new Set()
+const _pendingPartials = new Map()
+async function ensurePartial(key, url, containerId) {
+  if (_loadedPartials.has(key)) return false
+  if (_pendingPartials.has(key)) { await _pendingPartials.get(key); return false }
+  const container = document.getElementById(containerId)
+  if (!container) return false
+  const promise = fetch(url).then(r => r.text()).then(html => { container.innerHTML = html })
+  _pendingPartials.set(key, promise)
+  await promise
+  _pendingPartials.delete(key)
+  _loadedPartials.add(key)
+  return true
+}
+
+const PAGE_PARTIALS = {}
+export function registerPagePartials(page, partials) {
+  PAGE_PARTIALS[page] = partials
+}
+
+async function ensurePagePartials(page) {
+  const list = PAGE_PARTIALS[page]
+  if (!list) return
+  for (const { key, url, containerId, wire } of list) {
+    const firstLoad = await ensurePartial(key, url, containerId)
+    if (firstLoad) wire?.()
+  }
+}
+
 // ── Navigation ────────────────────────────────────────────────
-function openPage(page, label) {
+async function openPage(page, label) {
   document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'))
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
   document.getElementById(`page-${page}`).classList.add('active')
   document.getElementById('page-title').textContent = label
-  onPageLoad(page)
+  await onPageLoad(page)
 }
 
 document.querySelectorAll('.nav-link[data-page]').forEach(btn => {
@@ -200,13 +234,14 @@ export function registerTabLoaders(loaders) {
   Object.assign(TAB_LOADERS, loaders)
 }
 
-function activateTabBtn(page, btn) {
+async function activateTabBtn(page, btn) {
   const container = document.getElementById(TAB_CONTAINERS[page])
   const tab = btn.dataset.tab
   container.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'))
   btn.classList.add('active')
+  await ensurePagePartials(page)
   document.getElementById(`page-${page}`)
-    .querySelectorAll(':scope > .tab-panel')
+    .querySelectorAll('.tab-panel')
     .forEach(p => p.classList.toggle('active', p.dataset.tab === tab))
   TAB_LOADERS[page]?.[tab]?.()
 }
@@ -274,8 +309,9 @@ export function registerPageLoaders(loaders) {
   Object.assign(_onPageLoadExtra, loaders)
 }
 
-function onPageLoad(page) {
+async function onPageLoad(page) {
   if (TAB_CONTAINERS[page])  return loadActiveTab(page)
+  await ensurePagePartials(page)
   if (page === 'system')     return loadSystemSettings()
   if (_onPageLoadExtra[page]) return _onPageLoadExtra[page]()
 }

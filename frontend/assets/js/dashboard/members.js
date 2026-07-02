@@ -188,21 +188,6 @@ window.goMembersPage = (delta) => {
 
 // Debounced search + filter
 let _memberSearchTimer = null
-document.getElementById('member-search').addEventListener('input', () => {
-  clearTimeout(_memberSearchTimer)
-  _memberSearchTimer = setTimeout(() => {
-    _membersPage = 1
-    const { search, status, householdId, ministryId } = currentMemberFilters()
-    loadMembers(search, status, 1, householdId, ministryId)
-  }, 300)
-})
-;['member-status-filter', 'member-ministry-filter'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => {
-    _membersPage = 1
-    const { search, status, householdId, ministryId } = currentMemberFilters()
-    loadMembers(search, status, 1, householdId, ministryId)
-  })
-})
 
 // ── Members household filter picker ──────────────────────────
 function renderMemberHouseholdSearch(query) {
@@ -230,36 +215,55 @@ function renderMemberHouseholdSearch(query) {
   resultsEl.classList.remove('hidden')
 }
 
-document.getElementById('member-household-filter-search').addEventListener('focus', e => {
-  renderMemberHouseholdSearch(e.target.value.trim())
-})
-document.getElementById('member-household-filter-search').addEventListener('input', e => {
-  renderMemberHouseholdSearch(e.target.value.trim())
-})
-document.getElementById('member-household-filter-results').addEventListener('click', e => {
-  const item = e.target.closest('.msd-item')
-  if (!item || !item.dataset.id) return
-  _memberHouseholdFilterId = item.dataset.id
-  document.getElementById('member-household-filter-search').value = item.dataset.name
-  document.getElementById('member-household-filter-results').classList.add('hidden')
-  _membersPage = 1
-  const { search, status, householdId, ministryId } = currentMemberFilters()
-  loadMembers(search, status, 1, householdId, ministryId)
-})
-document.getElementById('member-household-filter-search').addEventListener('blur', () => {
-  setTimeout(() => {
+// Wires the "all members" tab-panel — called once, right after members.html is injected.
+export function wireMembersPanel() {
+  document.getElementById('member-search').addEventListener('input', () => {
+    clearTimeout(_memberSearchTimer)
+    _memberSearchTimer = setTimeout(() => {
+      _membersPage = 1
+      const { search, status, householdId, ministryId } = currentMemberFilters()
+      loadMembers(search, status, 1, householdId, ministryId)
+    }, 300)
+  })
+  ;['member-status-filter', 'member-ministry-filter'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      _membersPage = 1
+      const { search, status, householdId, ministryId } = currentMemberFilters()
+      loadMembers(search, status, 1, householdId, ministryId)
+    })
+  })
+
+  document.getElementById('member-household-filter-search').addEventListener('focus', e => {
+    renderMemberHouseholdSearch(e.target.value.trim())
+  })
+  document.getElementById('member-household-filter-search').addEventListener('input', e => {
+    renderMemberHouseholdSearch(e.target.value.trim())
+  })
+  document.getElementById('member-household-filter-results').addEventListener('click', e => {
+    const item = e.target.closest('.msd-item')
+    if (!item || !item.dataset.id) return
+    _memberHouseholdFilterId = item.dataset.id
+    document.getElementById('member-household-filter-search').value = item.dataset.name
     document.getElementById('member-household-filter-results').classList.add('hidden')
-    // If input was cleared, remove the filter
-    if (!document.getElementById('member-household-filter-search').value.trim()) {
-      if (_memberHouseholdFilterId) {
-        _memberHouseholdFilterId = ''
-        _membersPage = 1
-        const { search, status, householdId, ministryId } = currentMemberFilters()
-        loadMembers(search, status, 1, householdId, ministryId)
+    _membersPage = 1
+    const { search, status, householdId, ministryId } = currentMemberFilters()
+    loadMembers(search, status, 1, householdId, ministryId)
+  })
+  document.getElementById('member-household-filter-search').addEventListener('blur', () => {
+    setTimeout(() => {
+      document.getElementById('member-household-filter-results').classList.add('hidden')
+      // If input was cleared, remove the filter
+      if (!document.getElementById('member-household-filter-search').value.trim()) {
+        if (_memberHouseholdFilterId) {
+          _memberHouseholdFilterId = ''
+          _membersPage = 1
+          const { search, status, householdId, ministryId } = currentMemberFilters()
+          loadMembers(search, status, 1, householdId, ministryId)
+        }
       }
-    }
-  }, 150)
-})
+    }, 150)
+  })
+}
 
 // ── Role modal ────────────────────────────────────────────────
 window.openRoleModal = (userId) => {
@@ -327,21 +331,28 @@ document.getElementById('role-modal').addEventListener('click', (e) => {
 })
 
 // ── Invite links ──────────────────────────────────────────────
-document.querySelectorAll('input[name="invite-type"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    const isIndividual = radio.value === 'INDIVIDUAL'
-    document.getElementById('invite-email-group').style.display = isIndividual ? '' : 'none'
+// Wires the invites page — called once, right after invites.html is injected.
+export function wireInvitesPanel() {
+  document.querySelectorAll('input[name="invite-type"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const isIndividual = radio.value === 'INDIVIDUAL'
+      document.getElementById('invite-email-group').style.display = isIndividual ? '' : 'none'
+    })
   })
-})
 
-document.querySelectorAll('.expiry-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('.expiry-chip').forEach(c => c.classList.remove('active'))
-    chip.classList.add('active')
-    document.getElementById('expiry-custom').style.display =
-      chip.dataset.minutes === 'custom' ? '' : 'none'
+  document.querySelectorAll('.expiry-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.expiry-chip').forEach(c => c.classList.remove('active'))
+      chip.classList.add('active')
+      document.getElementById('expiry-custom').style.display =
+        chip.dataset.minutes === 'custom' ? '' : 'none'
+    })
   })
-})
+
+  document.getElementById('invite-search')?.addEventListener('input', renderInvitesList)
+  document.getElementById('invite-type-filter')?.addEventListener('change', renderInvitesList)
+  document.getElementById('invite-status-filter')?.addEventListener('change', renderInvitesList)
+}
 
 let _invitesAll = []
 
@@ -411,10 +422,6 @@ function renderInvitesList() {
     </table>
   `
 }
-
-document.getElementById('invite-search')?.addEventListener('input', renderInvitesList)
-document.getElementById('invite-type-filter')?.addEventListener('change', renderInvitesList)
-document.getElementById('invite-status-filter')?.addEventListener('change', renderInvitesList)
 
 window.createInviteLink = async () => {
   const btn      = document.getElementById('invite-create-btn')

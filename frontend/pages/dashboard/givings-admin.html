@@ -1,0 +1,121 @@
+        <div class="tab-panel active" data-tab="ledger">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Givings Ledger</h2>
+          <button class="btn btn-primary btn-sm" onclick="openGivingModal(null)">+ Record Giving</button>
+        </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-md);flex-wrap:wrap;align-items:center;">
+          <div class="member-search-wrap" style="width:200px;">
+            <input class="form-input" type="text" id="ledger-member-search" placeholder="Filter by member…" autocomplete="off">
+            <div id="ledger-member-results" class="member-search-dropdown hidden"></div>
+          </div>
+          <select class="form-select" id="ledger-project-filter" style="width:auto;"><option value="">All projects</option></select>
+          <select class="form-select" id="ledger-method-filter" style="width:auto;">
+            <option value="">All methods</option>
+            <option value="CASH">Cash</option>
+            <option value="MPESA">M-Pesa</option>
+            <option value="BANK_TRANSFER">Bank Transfer</option>
+            <option value="CARD">Card</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <input class="form-input" type="date" id="ledger-from-filter" style="width:auto;" title="From date">
+          <input class="form-input" type="date" id="ledger-to-filter" style="width:auto;" title="To date">
+          <label style="display:flex;align-items:center;gap:var(--space-xs);font-size:var(--font-size-sm);white-space:nowrap;cursor:pointer;">
+            <input type="checkbox" id="ledger-voided-filter"> Include voided
+          </label>
+        </div>
+        <div id="ledger-total" style="margin-bottom:var(--space-md);font-size:var(--font-size-sm);color:var(--color-text-muted);font-weight:600;"></div>
+        <div class="table-card">
+          <div id="ledger-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        <div id="ledger-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
+          <button class="btn btn-outline btn-sm" id="ledger-prev-btn" onclick="goLedgerPage(-1)">← Prev</button>
+          <span id="ledger-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
+          <button class="btn btn-outline btn-sm" id="ledger-next-btn" onclick="goLedgerPage(1)">Next →</button>
+        </div>
+        </div><!-- /ledger panel -->
+
+        <div class="tab-panel" data-tab="projects">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Giving Projects</h2>
+          <button class="btn btn-primary btn-sm" onclick="openProjectModal(null)">+ New Project</button>
+        </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <input class="form-input" type="search" id="project-search" placeholder="Search projects…" style="flex:1;min-width:200px;">
+          <select class="form-select" id="project-active-filter" style="width:auto;">
+            <option value="">All</option>
+            <option value="1">Active only</option>
+            <option value="0">Inactive only</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div id="projects-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        </div><!-- /projects panel -->
+
+        <div class="tab-panel" data-tab="pledges">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Pledges</h2>
+          <button class="btn btn-primary btn-sm" onclick="openPledgeModal('admin')">+ New Pledge</button>
+        </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-md);flex-wrap:wrap;align-items:center;">
+          <div class="member-search-wrap" style="width:200px;">
+            <input class="form-input" type="text" id="pledge-filter-member-search" placeholder="Filter by member…" autocomplete="off">
+            <div id="pledge-filter-member-results" class="member-search-dropdown hidden"></div>
+          </div>
+          <select class="form-select" id="pledge-project-filter" style="width:auto;"><option value="">All projects</option></select>
+          <select class="form-select" id="pledge-status-filter" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div id="pledges-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        </div><!-- /pledges panel -->
+
+        <div class="tab-panel" data-tab="corrections">
+        <h2 class="page-title-lg">Correction Requests</h2>
+        <div style="margin-bottom:var(--space-lg);">
+          <select class="form-select" id="correction-status-filter" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div id="correction-requests-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        </div><!-- /corrections panel -->
+
+        <div class="tab-panel" data-tab="reports">
+        <h2 class="page-title-lg">Giving Reports</h2>
+
+        <div class="card" style="margin-bottom:var(--space-lg)">
+          <div class="page-head">
+            <h3 style="margin-bottom:0">Annual Summary</h3>
+            <select class="form-select" id="report-year" style="width:auto;"></select>
+          </div>
+          <div id="summary-cards" class="giving-stats-grid" style="margin:var(--space-md) 0"></div>
+          <div class="table-card">
+            <div id="summary-tables"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="page-head">
+            <h3 style="margin-bottom:0">Date-Range Report</h3>
+            <div style="display:flex;gap:var(--space-md);flex-wrap:wrap;align-items:center;">
+              <input class="form-input" type="date" id="report-from" style="width:auto;" title="From date">
+              <input class="form-input" type="date" id="report-to" style="width:auto;" title="To date">
+              <select class="form-select" id="report-project" style="width:auto;"><option value="">All projects</option></select>
+            </div>
+          </div>
+          <div id="report-total" style="margin:var(--space-md) 0;font-size:var(--font-size-sm);color:var(--color-text-muted);font-weight:600;"></div>
+          <div class="table-card">
+            <div id="report-tables"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+          </div>
+        </div>
+        </div><!-- /reports panel -->

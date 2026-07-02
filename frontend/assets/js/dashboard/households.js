@@ -56,7 +56,10 @@ function renderHouseholdsList() {
   `
 }
 
-document.getElementById('household-search')?.addEventListener('input', renderHouseholdsList)
+// Wires the households tab-panel — called once, right after households.html is injected.
+export function wireHouseholdsPanel() {
+  document.getElementById('household-search')?.addEventListener('input', renderHouseholdsList)
+}
 
 window.openHouseholdCreateModal = () => {
   _householdModalId = null

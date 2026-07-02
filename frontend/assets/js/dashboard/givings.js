@@ -271,11 +271,6 @@ export async function loadPledgesAdmin() {
   }
 }
 
-// Pledge filter listeners
-;['pledge-project-filter', 'pledge-status-filter'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', () => loadPledgesAdmin())
-})
-
 // Pledge filter member search picker
 function renderPledgeMemberFilterSearch(query) {
   const resultsEl = document.getElementById('pledge-filter-member-results')
@@ -291,31 +286,6 @@ function renderPledgeMemberFilterSearch(query) {
   resultsEl.classList.remove('hidden')
 }
 
-document.getElementById('pledge-filter-member-search')?.addEventListener('focus', e => {
-  if (!_pledgeSlimMembers.length) {
-    api.get('/members/slim').then(data => { _pledgeSlimMembers = data; renderPledgeMemberFilterSearch(e.target.value.trim()) }).catch(() => {})
-  } else {
-    renderPledgeMemberFilterSearch(e.target.value.trim())
-  }
-})
-document.getElementById('pledge-filter-member-search')?.addEventListener('input', e => renderPledgeMemberFilterSearch(e.target.value.trim()))
-document.getElementById('pledge-filter-member-results')?.addEventListener('click', e => {
-  const item = e.target.closest('.msd-item')
-  if (!item) return
-  _pledgeFilterMemberId = item.dataset.profileId
-  document.getElementById('pledge-filter-member-search').value = item.dataset.name
-  document.getElementById('pledge-filter-member-results').classList.add('hidden')
-  loadPledgesAdmin()
-})
-document.getElementById('pledge-filter-member-search')?.addEventListener('blur', () => {
-  setTimeout(() => {
-    document.getElementById('pledge-filter-member-results')?.classList.add('hidden')
-    if (!document.getElementById('pledge-filter-member-search').value.trim() && _pledgeFilterMemberId) {
-      _pledgeFilterMemberId = ''
-      loadPledgesAdmin()
-    }
-  }, 150)
-})
 
 window.cancelPledge = async (id, isAdmin = false) => {
   const ok = await confirmDialog({ title: 'Cancel this pledge?', message: 'The pledge will be marked cancelled.', confirmText: 'Cancel pledge', danger: true })
@@ -563,17 +533,7 @@ export async function loadGivingsLedger(page = 1) {
 
 window.goLedgerPage = (delta) => loadGivingsLedger(_ledgerPage + delta)
 
-// Ledger filter listeners
-;['ledger-project-filter', 'ledger-method-filter', 'ledger-voided-filter'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', () => { _ledgerPage = 1; loadGivingsLedger(1) })
-})
 let _ledgerFilterTimer = null
-;['ledger-from-filter', 'ledger-to-filter'].forEach(id => {
-  document.getElementById(id)?.addEventListener('input', () => {
-    clearTimeout(_ledgerFilterTimer)
-    _ledgerFilterTimer = setTimeout(() => { _ledgerPage = 1; loadGivingsLedger(1) }, 400)
-  })
-})
 
 // Ledger member search picker
 function renderLedgerMemberSearch(query) {
@@ -589,32 +549,6 @@ function renderLedgerMemberSearch(query) {
   ).join('')
   resultsEl.classList.remove('hidden')
 }
-
-document.getElementById('ledger-member-search')?.addEventListener('focus', e => {
-  if (!_ledgerSlimMembers.length) {
-    api.get('/members/slim').then(data => { _ledgerSlimMembers = data; renderLedgerMemberSearch(e.target.value.trim()) }).catch(() => {})
-  } else {
-    renderLedgerMemberSearch(e.target.value.trim())
-  }
-})
-document.getElementById('ledger-member-search')?.addEventListener('input', e => renderLedgerMemberSearch(e.target.value.trim()))
-document.getElementById('ledger-member-results')?.addEventListener('click', e => {
-  const item = e.target.closest('.msd-item')
-  if (!item) return
-  _ledgerMemberFilterId = item.dataset.profileId
-  document.getElementById('ledger-member-search').value = item.dataset.name
-  document.getElementById('ledger-member-results').classList.add('hidden')
-  _ledgerPage = 1; loadGivingsLedger(1)
-})
-document.getElementById('ledger-member-search')?.addEventListener('blur', () => {
-  setTimeout(() => {
-    document.getElementById('ledger-member-results')?.classList.add('hidden')
-    if (!document.getElementById('ledger-member-search').value.trim() && _ledgerMemberFilterId) {
-      _ledgerMemberFilterId = ''
-      _ledgerPage = 1; loadGivingsLedger(1)
-    }
-  }, 150)
-})
 
 // ── Giving record/edit modal ──────────────────────────────────
 
@@ -838,9 +772,6 @@ function renderGivingProjectsList() {
   `
 }
 
-document.getElementById('project-search')?.addEventListener('input', renderGivingProjectsList)
-document.getElementById('project-active-filter')?.addEventListener('change', renderGivingProjectsList)
-
 window.openProjectModal = (id) => {
   _projectEditId = id
   const alertEl = document.getElementById('project-modal-alert')
@@ -987,8 +918,6 @@ function renderCorrectionRequestsList() {
   `
 }
 
-document.getElementById('correction-status-filter')?.addEventListener('change', renderCorrectionRequestsList)
-
 window.openCorrectionReviewModal = async (id) => {
   _correctionReviewId = id
   document.getElementById('correction-review-alert').className = 'hidden'
@@ -1058,3 +987,77 @@ window.resolveCorrection = async (action) => {
 document.getElementById('correction-review-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) window.closeCorrectionReviewModal()
 })
+
+// Wires the givings-admin tab-panels (ledger/projects/pledges/corrections) — called once,
+// right after givings-admin.html is injected. The reports tab wires its own filters lazily
+// inside loadGivingReports() since it only needs to run once that tab is first opened.
+export function wireGivingsAdminPanel() {
+  document.getElementById('ledger-project-filter')?.addEventListener('change', () => { _ledgerPage = 1; loadGivingsLedger(1) })
+  document.getElementById('ledger-method-filter')?.addEventListener('change', () => { _ledgerPage = 1; loadGivingsLedger(1) })
+  document.getElementById('ledger-voided-filter')?.addEventListener('change', () => { _ledgerPage = 1; loadGivingsLedger(1) })
+  ;['ledger-from-filter', 'ledger-to-filter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      clearTimeout(_ledgerFilterTimer)
+      _ledgerFilterTimer = setTimeout(() => { _ledgerPage = 1; loadGivingsLedger(1) }, 400)
+    })
+  })
+  document.getElementById('ledger-member-search')?.addEventListener('focus', e => {
+    if (!_ledgerSlimMembers.length) {
+      api.get('/members/slim').then(data => { _ledgerSlimMembers = data; renderLedgerMemberSearch(e.target.value.trim()) }).catch(() => {})
+    } else {
+      renderLedgerMemberSearch(e.target.value.trim())
+    }
+  })
+  document.getElementById('ledger-member-search')?.addEventListener('input', e => renderLedgerMemberSearch(e.target.value.trim()))
+  document.getElementById('ledger-member-results')?.addEventListener('click', e => {
+    const item = e.target.closest('.msd-item')
+    if (!item) return
+    _ledgerMemberFilterId = item.dataset.profileId
+    document.getElementById('ledger-member-search').value = item.dataset.name
+    document.getElementById('ledger-member-results').classList.add('hidden')
+    _ledgerPage = 1; loadGivingsLedger(1)
+  })
+  document.getElementById('ledger-member-search')?.addEventListener('blur', () => {
+    setTimeout(() => {
+      document.getElementById('ledger-member-results')?.classList.add('hidden')
+      if (!document.getElementById('ledger-member-search').value.trim() && _ledgerMemberFilterId) {
+        _ledgerMemberFilterId = ''
+        _ledgerPage = 1; loadGivingsLedger(1)
+      }
+    }, 150)
+  })
+
+  document.getElementById('project-search')?.addEventListener('input', renderGivingProjectsList)
+  document.getElementById('project-active-filter')?.addEventListener('change', renderGivingProjectsList)
+
+  ;['pledge-project-filter', 'pledge-status-filter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => loadPledgesAdmin())
+  })
+  document.getElementById('pledge-filter-member-search')?.addEventListener('focus', e => {
+    if (!_pledgeSlimMembers.length) {
+      api.get('/members/slim').then(data => { _pledgeSlimMembers = data; renderPledgeMemberFilterSearch(e.target.value.trim()) }).catch(() => {})
+    } else {
+      renderPledgeMemberFilterSearch(e.target.value.trim())
+    }
+  })
+  document.getElementById('pledge-filter-member-search')?.addEventListener('input', e => renderPledgeMemberFilterSearch(e.target.value.trim()))
+  document.getElementById('pledge-filter-member-results')?.addEventListener('click', e => {
+    const item = e.target.closest('.msd-item')
+    if (!item) return
+    _pledgeFilterMemberId = item.dataset.profileId
+    document.getElementById('pledge-filter-member-search').value = item.dataset.name
+    document.getElementById('pledge-filter-member-results').classList.add('hidden')
+    loadPledgesAdmin()
+  })
+  document.getElementById('pledge-filter-member-search')?.addEventListener('blur', () => {
+    setTimeout(() => {
+      document.getElementById('pledge-filter-member-results')?.classList.add('hidden')
+      if (!document.getElementById('pledge-filter-member-search').value.trim() && _pledgeFilterMemberId) {
+        _pledgeFilterMemberId = ''
+        loadPledgesAdmin()
+      }
+    }, 150)
+  })
+
+  document.getElementById('correction-status-filter')?.addEventListener('change', renderCorrectionRequestsList)
+}

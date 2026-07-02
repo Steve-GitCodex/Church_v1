@@ -36,12 +36,18 @@ frontend/
       home.css             ← index.html (public homepage) styles
       content.css          ← public news.html / events.html page styles
       about.css            ← about.html styles (hero, leaders grid, beliefs list, service cards)
+    icons/                 ← icon-192.png, icon-512.png, apple-touch-icon.png (rounded-square, transparent
+                             corners — "any" purpose), maskable-icon-192.png, maskable-icon-512.png (full-bleed,
+                             opaque, mark kept inside the ~72% safe zone — "maskable" purpose), favicon-32.png,
+                             favicon-16.png. Cropped from a generated reference sheet, not hand-drawn — if the
+                             design changes, re-extract all sizes from one source and bump sw.js's CACHE_VERSION
     js/
       api.js               ← fetch wrapper, token storage
       auth.js              ← JWT decode, requireAuth, isAtLeast, hasPermission
       theme.js             ← toggleTheme (View Transitions circular reveal), currentTheme (shared across pages)
       ui.js                ← toast(message, type), confirmDialog({…}) — use these, never native alert/confirm
       defaultCover.js      ← defaultCover(item) → SVG data-URI for content with no imageUrl
+      pwa.js               ← registers /sw.js on page load; included on every HTML page
       pages/
         register.js        ← register page logic
         login.js           ← login page logic
@@ -63,19 +69,32 @@ frontend/
     register.html
     forgot-password.html
     reset-password.html
-    dashboard.html         ← shell only (.layout, sidebar, utility panel, topbar) + empty tab containers
-    dashboard/             ← lazy-loaded per-tab HTML partials, fetched once and cached by the matching dashboard/*.js module
-      members.html
-      households.html
-      ministries.html
-      content.html
-      account.html
+    dashboard.html         ← shell only (.layout, sidebar, utility panel, topbar, modals) + empty
+                             per-page containers (e.g. #members-panels, #givings-admin-panels)
+    dashboard/             ← lazy-loaded per-page HTML partials — one file per domain JS module,
+                             fetched once and injected via core.js's registerPagePartials/ensurePartial
+      members.html         ← page-members tab-panels (all/pending/requests)
+      invites.html         ← page-invites (no tabs)
+      households.html      ← the "households" tab-panel inside page-groups
+      ministries.html      ← the "ministries" tab-panel inside page-groups
+      updates.html         ← page-updates tab-panels (news/events)
+      content.html         ← page-content tab-panels (posts/about)
+      account.html         ← page-account tab-panels (profile/givings)
+      givings-admin.html   ← page-givings-admin tab-panels (ledger/projects/pledges/corrections/reports)
     news.html              ← public news & announcements feed
     events.html            ← public events feed
     about.html             ← public About page (CMS-fed)
   index.html
   404.html                 ← styled 404 page; uses absolute asset path /assets/css/base.css
+  manifest.json            ← PWA manifest (name, icons, standalone display, theme colour)
+  sw.js                    ← service worker — cache-first static assets, always bypasses /api/*
 ```
+
+Every HTML page links `/manifest.json`, the favicon set, and `<script type="module" src="/assets/js/pwa.js">`
+in `<head>` (absolute paths so the same tags work at any directory depth). The service worker never
+caches `/api/*` — member/giving data must always be fresh, and caching auth-sensitive responses risks
+leaking data across accounts on a shared device. Bump `CACHE_VERSION` in `sw.js` whenever static assets
+change so stale caches get evicted on the next visit.
 
 **Dashboard layout:** `.layout` has three children — `.sidebar` (left nav rail), `.main`
 (page content area), and `.utility-panel` (right rail with identity, theme, website, settings).

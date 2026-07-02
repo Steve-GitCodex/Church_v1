@@ -1,0 +1,45 @@
+        <div class="tab-panel" data-tab="pending">
+        <h2 class="page-title-lg">Pending Approvals</h2>
+        <div class="table-card">
+          <div id="pending-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        </div><!-- /pending panel -->
+
+        <div class="tab-panel active" data-tab="all">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">All Members</h2>
+          <button class="btn btn-primary btn-sm" onclick="openCreateMemberModal()">+ Add Member</button>
+        </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <input class="form-input" type="search" id="member-search" placeholder="Search name, email, phone…" style="flex:1;min-width:200px;">
+          <select class="form-select" id="member-status-filter" style="width:auto;">
+            <option value="">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="TRANSFERRED">Transferred</option>
+            <option value="DECEASED">Deceased</option>
+          </select>
+          <div class="member-search-wrap" style="width:180px;">
+            <input class="form-input" type="text" id="member-household-filter-search" placeholder="Filter by household…" autocomplete="off">
+            <div id="member-household-filter-results" class="member-search-dropdown hidden"></div>
+          </div>
+          <select class="form-select" id="member-ministry-filter" style="width:auto;">
+            <option value="">All ministries</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div id="members-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        <div id="members-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
+          <button class="btn btn-outline btn-sm" id="members-prev-btn" onclick="goMembersPage(-1)">← Prev</button>
+          <span id="members-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
+          <button class="btn btn-outline btn-sm" id="members-next-btn" onclick="goMembersPage(1)">Next →</button>
+        </div>
+        </div><!-- /all panel -->
+
+        <div class="tab-panel" data-tab="requests">
+        <h2 class="page-title-lg">Profile Update Requests</h2>
+        <div class="table-card">
+          <div id="update-requests-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        </div><!-- /requests panel -->

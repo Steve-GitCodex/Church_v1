@@ -102,14 +102,17 @@ window.goMinistriesPage = (delta) => {
   renderMinistriesPage()
 }
 
-document.getElementById('ministry-search')?.addEventListener('input', () => {
-  _ministriesPage = 1
-  renderMinistriesPage()
-})
-document.getElementById('ministry-active-filter')?.addEventListener('change', () => {
-  _ministriesPage = 1
-  renderMinistriesPage()
-})
+// Wires the ministries tab-panel — called once, right after ministries.html is injected.
+export function wireMinistriesPanel() {
+  document.getElementById('ministry-search')?.addEventListener('input', () => {
+    _ministriesPage = 1
+    renderMinistriesPage()
+  })
+  document.getElementById('ministry-active-filter')?.addEventListener('change', () => {
+    _ministriesPage = 1
+    renderMinistriesPage()
+  })
+}
 
 window.openMinistryCreateModal = () => {
   _ministryModalId = null

@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — AIC Ruiru</title>
   <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light')</script>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2f6b5e">
+  <link rel="icon" href="/assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="icon" href="/assets/icons/favicon-16.png" sizes="16x16" type="image/png">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <script type="module" src="/assets/js/pwa.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -120,25 +126,7 @@
           <button class="seg-btn active" data-tab="profile">Profile</button>
           <button class="seg-btn giving-feature-nav hidden" data-tab="givings">My Givings</button>
         </div>
-
-        <div class="tab-panel active" data-tab="profile">
-          <div class="profile-grid" id="profile-grid">
-            <p class="text-muted">Loading…</p>
-          </div>
-        </div>
-
-        <div class="tab-panel" data-tab="givings">
-          <div id="my-givings-summary" class="giving-summary-row" style="margin-bottom:var(--space-xl);"></div>
-          <div class="table-card">
-            <div id="my-givings-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-          </div>
-
-          <div class="page-head" style="margin-top:var(--space-xl)">
-            <h3 style="margin-bottom:0">My Pledges</h3>
-            <button class="btn btn-outline btn-sm" onclick="openPledgeModal('self')">+ New Pledge</button>
-          </div>
-          <div id="my-pledges-list"><p class="text-muted">Loading…</p></div>
-        </div>
+        <div id="account-panels"></div>
       </div>
 
       <!-- Givings management (Ledger / Projects / Corrections / Reports tabs) -->
@@ -150,128 +138,7 @@
           <button class="seg-btn" data-tab="corrections">Corrections <span id="giving-requests-badge" class="badge badge-pending" style="display:none"></span></button>
           <button class="seg-btn" data-tab="reports">Reports</button>
         </div>
-
-        <div class="tab-panel active" data-tab="ledger">
-        <div class="page-head">
-          <h2 class="page-title-lg" style="margin-bottom:0">Givings Ledger</h2>
-          <button class="btn btn-primary btn-sm" onclick="openGivingModal(null)">+ Record Giving</button>
-        </div>
-        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-md);flex-wrap:wrap;align-items:center;">
-          <div class="member-search-wrap" style="width:200px;">
-            <input class="form-input" type="text" id="ledger-member-search" placeholder="Filter by member…" autocomplete="off">
-            <div id="ledger-member-results" class="member-search-dropdown hidden"></div>
-          </div>
-          <select class="form-select" id="ledger-project-filter" style="width:auto;"><option value="">All projects</option></select>
-          <select class="form-select" id="ledger-method-filter" style="width:auto;">
-            <option value="">All methods</option>
-            <option value="CASH">Cash</option>
-            <option value="MPESA">M-Pesa</option>
-            <option value="BANK_TRANSFER">Bank Transfer</option>
-            <option value="CARD">Card</option>
-            <option value="OTHER">Other</option>
-          </select>
-          <input class="form-input" type="date" id="ledger-from-filter" style="width:auto;" title="From date">
-          <input class="form-input" type="date" id="ledger-to-filter" style="width:auto;" title="To date">
-          <label style="display:flex;align-items:center;gap:var(--space-xs);font-size:var(--font-size-sm);white-space:nowrap;cursor:pointer;">
-            <input type="checkbox" id="ledger-voided-filter"> Include voided
-          </label>
-        </div>
-        <div id="ledger-total" style="margin-bottom:var(--space-md);font-size:var(--font-size-sm);color:var(--color-text-muted);font-weight:600;"></div>
-        <div class="table-card">
-          <div id="ledger-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        <div id="ledger-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
-          <button class="btn btn-outline btn-sm" id="ledger-prev-btn" onclick="goLedgerPage(-1)">← Prev</button>
-          <span id="ledger-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
-          <button class="btn btn-outline btn-sm" id="ledger-next-btn" onclick="goLedgerPage(1)">Next →</button>
-        </div>
-        </div><!-- /ledger panel -->
-
-        <div class="tab-panel" data-tab="projects">
-        <div class="page-head">
-          <h2 class="page-title-lg" style="margin-bottom:0">Giving Projects</h2>
-          <button class="btn btn-primary btn-sm" onclick="openProjectModal(null)">+ New Project</button>
-        </div>
-        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
-          <input class="form-input" type="search" id="project-search" placeholder="Search projects…" style="flex:1;min-width:200px;">
-          <select class="form-select" id="project-active-filter" style="width:auto;">
-            <option value="">All</option>
-            <option value="1">Active only</option>
-            <option value="0">Inactive only</option>
-          </select>
-        </div>
-        <div class="table-card">
-          <div id="projects-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        </div><!-- /projects panel -->
-
-        <div class="tab-panel" data-tab="pledges">
-        <div class="page-head">
-          <h2 class="page-title-lg" style="margin-bottom:0">Pledges</h2>
-          <button class="btn btn-primary btn-sm" onclick="openPledgeModal('admin')">+ New Pledge</button>
-        </div>
-        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-md);flex-wrap:wrap;align-items:center;">
-          <div class="member-search-wrap" style="width:200px;">
-            <input class="form-input" type="text" id="pledge-filter-member-search" placeholder="Filter by member…" autocomplete="off">
-            <div id="pledge-filter-member-results" class="member-search-dropdown hidden"></div>
-          </div>
-          <select class="form-select" id="pledge-project-filter" style="width:auto;"><option value="">All projects</option></select>
-          <select class="form-select" id="pledge-status-filter" style="width:auto;">
-            <option value="">All statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-        </div>
-        <div class="table-card">
-          <div id="pledges-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        </div><!-- /pledges panel -->
-
-        <div class="tab-panel" data-tab="corrections">
-        <h2 class="page-title-lg">Correction Requests</h2>
-        <div style="margin-bottom:var(--space-lg);">
-          <select class="form-select" id="correction-status-filter" style="width:auto;">
-            <option value="">All statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
-        </div>
-        <div class="table-card">
-          <div id="correction-requests-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        </div><!-- /corrections panel -->
-
-        <div class="tab-panel" data-tab="reports">
-        <h2 class="page-title-lg">Giving Reports</h2>
-
-        <div class="card" style="margin-bottom:var(--space-lg)">
-          <div class="page-head">
-            <h3 style="margin-bottom:0">Annual Summary</h3>
-            <select class="form-select" id="report-year" style="width:auto;"></select>
-          </div>
-          <div id="summary-cards" class="giving-stats-grid" style="margin:var(--space-md) 0"></div>
-          <div class="table-card">
-            <div id="summary-tables"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="page-head">
-            <h3 style="margin-bottom:0">Date-Range Report</h3>
-            <div style="display:flex;gap:var(--space-md);flex-wrap:wrap;align-items:center;">
-              <input class="form-input" type="date" id="report-from" style="width:auto;" title="From date">
-              <input class="form-input" type="date" id="report-to" style="width:auto;" title="To date">
-              <select class="form-select" id="report-project" style="width:auto;"><option value="">All projects</option></select>
-            </div>
-          </div>
-          <div id="report-total" style="margin:var(--space-md) 0;font-size:var(--font-size-sm);color:var(--color-text-muted);font-weight:600;"></div>
-          <div class="table-card">
-            <div id="report-tables"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-          </div>
-        </div>
-        </div><!-- /reports panel -->
+        <div id="givings-admin-panels"></div>
       </div><!-- /page-givings-admin -->
 
       <!-- User Settings (all roles) -->
@@ -355,121 +222,12 @@
           <button class="seg-btn" data-tab="pending">Pending <span id="pending-badge" class="badge badge-pending" style="display:none"></span></button>
           <button class="seg-btn" data-tab="requests">Update Requests <span id="update-requests-badge" class="badge badge-pending" style="display:none"></span></button>
         </div>
-
-        <div class="tab-panel" data-tab="pending">
-        <h2 class="page-title-lg">Pending Approvals</h2>
-        <div class="table-card">
-          <div id="pending-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        </div><!-- /pending panel -->
-
-        <div class="tab-panel active" data-tab="all">
-        <div class="page-head">
-          <h2 class="page-title-lg" style="margin-bottom:0">All Members</h2>
-          <button class="btn btn-primary btn-sm" onclick="openCreateMemberModal()">+ Add Member</button>
-        </div>
-        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
-          <input class="form-input" type="search" id="member-search" placeholder="Search name, email, phone…" style="flex:1;min-width:200px;">
-          <select class="form-select" id="member-status-filter" style="width:auto;">
-            <option value="">All statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="TRANSFERRED">Transferred</option>
-            <option value="DECEASED">Deceased</option>
-          </select>
-          <div class="member-search-wrap" style="width:180px;">
-            <input class="form-input" type="text" id="member-household-filter-search" placeholder="Filter by household…" autocomplete="off">
-            <div id="member-household-filter-results" class="member-search-dropdown hidden"></div>
-          </div>
-          <select class="form-select" id="member-ministry-filter" style="width:auto;">
-            <option value="">All ministries</option>
-          </select>
-        </div>
-        <div class="table-card">
-          <div id="members-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        <div id="members-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
-          <button class="btn btn-outline btn-sm" id="members-prev-btn" onclick="goMembersPage(-1)">← Prev</button>
-          <span id="members-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
-          <button class="btn btn-outline btn-sm" id="members-next-btn" onclick="goMembersPage(1)">Next →</button>
-        </div>
-        </div><!-- /all panel -->
-
-        <div class="tab-panel" data-tab="requests">
-        <h2 class="page-title-lg">Profile Update Requests</h2>
-        <div class="table-card">
-          <div id="update-requests-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        </div><!-- /requests panel -->
+        <div id="members-panels"></div>
       </div><!-- /page-members -->
 
       <!-- Invite Links page (admin) -->
       <div class="page" id="page-invites">
-        <h2 class="page-title-lg">Invite Links</h2>
-
-        <div class="card" style="margin-bottom:var(--space-xl)">
-          <h3 style="margin-bottom:var(--space-lg)">Create Invite</h3>
-          <div id="invite-alert" class="hidden"></div>
-          <div class="form-group">
-            <label class="form-label">Type</label>
-            <div style="display:flex;gap:var(--space-md);">
-              <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;">
-                <input type="radio" name="invite-type" value="INDIVIDUAL" checked> Individual (auto-approved)
-              </label>
-              <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;">
-                <input type="radio" name="invite-type" value="MASS"> Mass (standard approval)
-              </label>
-            </div>
-          </div>
-          <div class="form-group" id="invite-email-group">
-            <label class="form-label" for="invite-email">Invitee email</label>
-            <input class="form-input" type="email" id="invite-email" placeholder="person@example.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Expires in</label>
-            <div style="display:flex;gap:var(--space-xs);flex-wrap:wrap;" id="expiry-quick">
-              <button type="button" class="expiry-chip" data-minutes="60">1 hour</button>
-              <button type="button" class="expiry-chip" data-minutes="360">6 hours</button>
-              <button type="button" class="expiry-chip" data-minutes="720">12 hours</button>
-              <button type="button" class="expiry-chip active" data-minutes="1440">1 day</button>
-              <button type="button" class="expiry-chip" data-minutes="4320">3 days</button>
-              <button type="button" class="expiry-chip" data-minutes="10080">7 days</button>
-              <button type="button" class="expiry-chip" data-minutes="20160">14 days</button>
-              <button type="button" class="expiry-chip" data-minutes="43200">30 days</button>
-              <button type="button" class="expiry-chip" data-minutes="custom">Custom…</button>
-            </div>
-            <div id="expiry-custom" style="display:none;margin-top:var(--space-sm);">
-              <input type="datetime-local" class="form-input" id="invite-expiry-date">
-            </div>
-          </div>
-          <button class="btn btn-primary" id="invite-create-btn" onclick="createInviteLink()">Generate Link</button>
-
-          <div id="invite-result" class="hidden" style="margin-top:var(--space-lg);">
-            <label class="form-label">Invite link</label>
-            <div style="display:flex;gap:var(--space-sm);">
-              <input class="form-input" type="text" id="invite-link-output" readonly style="flex:1;font-size:var(--font-size-sm);">
-              <button class="btn btn-outline btn-sm" onclick="copyInviteLink()">Copy</button>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
-          <input class="form-input" type="search" id="invite-search" placeholder="Search by email…" style="flex:1;min-width:200px;">
-          <select class="form-select" id="invite-type-filter" style="width:auto;">
-            <option value="">All types</option>
-            <option value="INDIVIDUAL">Individual</option>
-            <option value="MASS">Mass</option>
-          </select>
-          <select class="form-select" id="invite-status-filter" style="width:auto;">
-            <option value="">All statuses</option>
-            <option value="Active">Active</option>
-            <option value="Used">Used</option>
-            <option value="Expired">Expired</option>
-          </select>
-        </div>
-        <div class="table-card">
-          <div id="invites-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
+        <div id="invites-content"></div>
       </div>
 
       <!-- Groups (Households / Ministries tabs) -->
@@ -478,42 +236,8 @@
           <button class="seg-btn active" data-tab="households">Households</button>
           <button class="seg-btn" data-tab="ministries">Ministries</button>
         </div>
-
-        <div class="tab-panel active" data-tab="households">
-        <div class="page-head">
-          <h2 class="page-title-lg" style="margin-bottom:0">Households</h2>
-          <button class="btn btn-primary btn-sm" onclick="openHouseholdCreateModal()">+ New Household</button>
-        </div>
-        <div style="margin-bottom:var(--space-lg);">
-          <input class="form-input" type="search" id="household-search" placeholder="Search households…" style="max-width:280px;">
-        </div>
-        <div class="table-card">
-          <div id="households-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        </div><!-- /households panel -->
-
-        <div class="tab-panel" data-tab="ministries">
-        <div class="page-head">
-          <h2 class="page-title-lg" style="margin-bottom:0">Ministries</h2>
-          <button class="btn btn-primary btn-sm" onclick="openMinistryCreateModal()">+ New Ministry</button>
-        </div>
-        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
-          <input class="form-input" type="search" id="ministry-search" placeholder="Search ministries…" style="flex:1;min-width:200px;">
-          <select class="form-select" id="ministry-active-filter" style="width:auto;">
-            <option value="">All</option>
-            <option value="1">Active only</option>
-            <option value="0">Inactive only</option>
-          </select>
-        </div>
-        <div class="table-card">
-          <div id="ministries-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-        <div id="ministries-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
-          <button class="btn btn-outline btn-sm" id="ministries-prev-btn" onclick="goMinistriesPage(-1)">← Prev</button>
-          <span id="ministries-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
-          <button class="btn btn-outline btn-sm" id="ministries-next-btn" onclick="goMinistriesPage(1)">Next →</button>
-        </div>
-        </div><!-- /ministries panel -->
+        <div id="households-panel"></div>
+        <div id="ministries-panel"></div>
       </div><!-- /page-groups -->
 
       <!-- Updates (News / Events tabs) -->
@@ -522,47 +246,7 @@
           <button class="seg-btn active" data-tab="news">News &amp; Announcements <span id="news-badge" class="nav-badge" style="display:none"></span></button>
           <button class="seg-btn" data-tab="events">Events <span id="events-badge" class="nav-badge" style="display:none"></span></button>
         </div>
-
-        <div class="tab-panel active" data-tab="news">
-        <h2 class="page-title-lg">News &amp; Announcements</h2>
-        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;align-items:center;">
-          <select class="form-select" id="news-type-filter" style="width:auto;">
-            <option value="">All types</option>
-            <option value="NEWS">News</option>
-            <option value="ANNOUNCEMENT">Announcement</option>
-          </select>
-          <input class="form-input" type="text" id="news-category-filter" placeholder="Category…" style="width:160px;">
-          <input class="form-input" type="date" id="news-from-filter" title="From date" style="width:auto;">
-          <input class="form-input" type="date" id="news-to-filter" title="To date" style="width:auto;">
-          <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;font-size:var(--font-size-sm);white-space:nowrap;">
-            <input type="checkbox" id="news-unseen-filter"> Unseen only
-          </label>
-        </div>
-        <div id="news-list" class="content-cards-grid">
-          <p class="text-muted">Loading…</p>
-        </div>
-        <div id="news-load-more" class="load-more-wrap hidden">
-          <button class="btn btn-outline btn-sm" onclick="loadMoreNews()">Load more</button>
-        </div>
-        </div><!-- /news panel -->
-
-        <div class="tab-panel" data-tab="events">
-        <h2 class="page-title-lg">Events</h2>
-        <div style="display:flex;flex-wrap:wrap;gap:var(--space-sm);align-items:center;margin-bottom:var(--space-lg);">
-          <input class="form-input" type="text" id="events-category-filter" placeholder="Category…" style="width:160px;">
-          <input class="form-input" type="date" id="events-from-filter" title="From date" style="width:auto;">
-          <input class="form-input" type="date" id="events-to-filter" title="To date" style="width:auto;">
-          <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;font-size:var(--font-size-sm);white-space:nowrap;">
-            <input type="checkbox" id="events-unseen-filter"> Unseen only
-          </label>
-        </div>
-        <div id="events-list" class="content-cards-grid">
-          <p class="text-muted">Loading…</p>
-        </div>
-        <div id="events-load-more" class="load-more-wrap hidden">
-          <button class="btn btn-outline btn-sm" onclick="loadMoreEvents()">Load more</button>
-        </div>
-        </div><!-- /events panel -->
+        <div id="updates-panels"></div>
       </div><!-- /page-updates -->
 
       <!-- Content (Posts / About Page tabs) -->
@@ -571,58 +255,7 @@
           <button class="seg-btn active" data-tab="posts">Posts</button>
           <button class="seg-btn admin-only hidden" data-tab="about">About Page</button>
         </div>
-
-        <div class="tab-panel" data-tab="about">
-        <div class="page-head">
-          <h2 class="page-title-lg" style="margin-bottom:0">About Page</h2>
-          <button class="btn btn-primary btn-sm" onclick="saveAboutEditor()">Save changes</button>
-        </div>
-        <div id="about-editor-form"></div>
-        </div><!-- /about panel -->
-
-        <div class="tab-panel active" data-tab="posts">
-        <div class="page-head">
-          <h2 class="page-title-lg" style="margin-bottom:0">Content</h2>
-          <button class="btn btn-primary btn-sm" onclick="openContentCreateModal()">+ New Post</button>
-        </div>
-
-        <!-- Segmented type filter -->
-        <div class="seg-control" id="content-type-seg">
-          <button class="seg-btn active" data-value="">All</button>
-          <button class="seg-btn" data-value="NEWS">News</button>
-          <button class="seg-btn" data-value="ANNOUNCEMENT">Announcements</button>
-          <button class="seg-btn" data-value="EVENT">Events</button>
-        </div>
-
-        <!-- Status filter -->
-        <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-md);flex-wrap:wrap;">
-          <span style="font-size:var(--font-size-sm);color:var(--color-text-muted);">Status:</span>
-          <div class="seg-control seg-control-sm" id="content-status-seg">
-            <button class="seg-btn active" data-value="">All</button>
-            <button class="seg-btn" data-value="DRAFT">Draft</button>
-            <button class="seg-btn" data-value="PUBLISHED">Published</button>
-            <button class="seg-btn" data-value="ARCHIVED">Archived</button>
-          </div>
-          <span id="content-admin-count" style="font-size:var(--font-size-sm);color:var(--color-text-muted);margin-left:auto;"></span>
-        </div>
-
-        <!-- Search / category / date filters -->
-        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;align-items:center;">
-          <input class="form-input" type="search" id="content-admin-search" placeholder="Search title…" style="flex:1;min-width:200px;">
-          <input class="form-input" type="text" id="content-admin-category-filter" placeholder="Category…" style="width:160px;">
-          <input class="form-input" type="date" id="content-admin-from-filter" title="From date" style="width:auto;">
-          <input class="form-input" type="date" id="content-admin-to-filter" title="To date" style="width:auto;">
-        </div>
-
-        <div class="table-card">
-          <div id="content-admin-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
-        </div>
-
-        <!-- Load more -->
-        <div id="content-admin-load-more" class="load-more-wrap hidden">
-          <button class="btn btn-outline btn-sm" onclick="loadMoreContentAdmin()">Load more</button>
-        </div>
-        </div><!-- /posts panel -->
+        <div id="content-panels"></div>
       </div><!-- /page-content -->
 
     </div>

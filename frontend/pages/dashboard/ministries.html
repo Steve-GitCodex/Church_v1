@@ -1,0 +1,22 @@
+        <div class="tab-panel" data-tab="ministries">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Ministries</h2>
+          <button class="btn btn-primary btn-sm" onclick="openMinistryCreateModal()">+ New Ministry</button>
+        </div>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;">
+          <input class="form-input" type="search" id="ministry-search" placeholder="Search ministries…" style="flex:1;min-width:200px;">
+          <select class="form-select" id="ministry-active-filter" style="width:auto;">
+            <option value="">All</option>
+            <option value="1">Active only</option>
+            <option value="0">Inactive only</option>
+          </select>
+        </div>
+        <div class="table-card">
+          <div id="ministries-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+        <div id="ministries-pagination" class="hidden" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-md) 0;">
+          <button class="btn btn-outline btn-sm" id="ministries-prev-btn" onclick="goMinistriesPage(-1)">← Prev</button>
+          <span id="ministries-page-info" style="font-size:var(--font-size-sm);color:var(--color-muted)"></span>
+          <button class="btn btn-outline btn-sm" id="ministries-next-btn" onclick="goMinistriesPage(1)">Next →</button>
+        </div>
+        </div><!-- /ministries panel -->

@@ -1,0 +1,51 @@
+        <div class="tab-panel" data-tab="about">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">About Page</h2>
+          <button class="btn btn-primary btn-sm" onclick="saveAboutEditor()">Save changes</button>
+        </div>
+        <div id="about-editor-form"></div>
+        </div><!-- /about panel -->
+
+        <div class="tab-panel active" data-tab="posts">
+        <div class="page-head">
+          <h2 class="page-title-lg" style="margin-bottom:0">Content</h2>
+          <button class="btn btn-primary btn-sm" onclick="openContentCreateModal()">+ New Post</button>
+        </div>
+
+        <!-- Segmented type filter -->
+        <div class="seg-control" id="content-type-seg">
+          <button class="seg-btn active" data-value="">All</button>
+          <button class="seg-btn" data-value="NEWS">News</button>
+          <button class="seg-btn" data-value="ANNOUNCEMENT">Announcements</button>
+          <button class="seg-btn" data-value="EVENT">Events</button>
+        </div>
+
+        <!-- Status filter -->
+        <div style="display:flex;align-items:center;gap:var(--space-sm);margin-bottom:var(--space-md);flex-wrap:wrap;">
+          <span style="font-size:var(--font-size-sm);color:var(--color-text-muted);">Status:</span>
+          <div class="seg-control seg-control-sm" id="content-status-seg">
+            <button class="seg-btn active" data-value="">All</button>
+            <button class="seg-btn" data-value="DRAFT">Draft</button>
+            <button class="seg-btn" data-value="PUBLISHED">Published</button>
+            <button class="seg-btn" data-value="ARCHIVED">Archived</button>
+          </div>
+          <span id="content-admin-count" style="font-size:var(--font-size-sm);color:var(--color-text-muted);margin-left:auto;"></span>
+        </div>
+
+        <!-- Search / category / date filters -->
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;align-items:center;">
+          <input class="form-input" type="search" id="content-admin-search" placeholder="Search title…" style="flex:1;min-width:200px;">
+          <input class="form-input" type="text" id="content-admin-category-filter" placeholder="Category…" style="width:160px;">
+          <input class="form-input" type="date" id="content-admin-from-filter" title="From date" style="width:auto;">
+          <input class="form-input" type="date" id="content-admin-to-filter" title="To date" style="width:auto;">
+        </div>
+
+        <div class="table-card">
+          <div id="content-admin-list"><p class="text-muted" style="padding:var(--space-lg)">Loading…</p></div>
+        </div>
+
+        <!-- Load more -->
+        <div id="content-admin-load-more" class="load-more-wrap hidden">
+          <button class="btn btn-outline btn-sm" onclick="loadMoreContentAdmin()">Load more</button>
+        </div>
+        </div><!-- /posts panel -->

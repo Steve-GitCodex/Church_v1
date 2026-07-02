@@ -1,0 +1,40 @@
+        <div class="tab-panel active" data-tab="news">
+        <h2 class="page-title-lg">News &amp; Announcements</h2>
+        <div style="display:flex;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap;align-items:center;">
+          <select class="form-select" id="news-type-filter" style="width:auto;">
+            <option value="">All types</option>
+            <option value="NEWS">News</option>
+            <option value="ANNOUNCEMENT">Announcement</option>
+          </select>
+          <input class="form-input" type="text" id="news-category-filter" placeholder="Category…" style="width:160px;">
+          <input class="form-input" type="date" id="news-from-filter" title="From date" style="width:auto;">
+          <input class="form-input" type="date" id="news-to-filter" title="To date" style="width:auto;">
+          <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;font-size:var(--font-size-sm);white-space:nowrap;">
+            <input type="checkbox" id="news-unseen-filter"> Unseen only
+          </label>
+        </div>
+        <div id="news-list" class="content-cards-grid">
+          <p class="text-muted">Loading…</p>
+        </div>
+        <div id="news-load-more" class="load-more-wrap hidden">
+          <button class="btn btn-outline btn-sm" onclick="loadMoreNews()">Load more</button>
+        </div>
+        </div><!-- /news panel -->
+
+        <div class="tab-panel" data-tab="events">
+        <h2 class="page-title-lg">Events</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--space-sm);align-items:center;margin-bottom:var(--space-lg);">
+          <input class="form-input" type="text" id="events-category-filter" placeholder="Category…" style="width:160px;">
+          <input class="form-input" type="date" id="events-from-filter" title="From date" style="width:auto;">
+          <input class="form-input" type="date" id="events-to-filter" title="To date" style="width:auto;">
+          <label style="display:flex;align-items:center;gap:var(--space-xs);cursor:pointer;font-size:var(--font-size-sm);white-space:nowrap;">
+            <input type="checkbox" id="events-unseen-filter"> Unseen only
+          </label>
+        </div>
+        <div id="events-list" class="content-cards-grid">
+          <p class="text-muted">Loading…</p>
+        </div>
+        <div id="events-load-more" class="load-more-wrap hidden">
+          <button class="btn btn-outline btn-sm" onclick="loadMoreEvents()">Load more</button>
+        </div>
+        </div><!-- /events panel -->
