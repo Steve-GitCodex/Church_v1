@@ -8,22 +8,22 @@ let _filterTimer = null
 const PANEL_KEY = 'aicr_filter_collapsed'
 
 // ── DOM refs ──────────────────────────────────────────────────
-const grid        = document.getElementById('news-grid')
+const grid = document.getElementById('news-grid')
 const loadMoreWrap = document.getElementById('load-more-wrap')
-const loadMoreBtn  = document.getElementById('load-more-btn')
-const emptyMsg    = document.getElementById('empty-msg')
+const loadMoreBtn = document.getElementById('load-more-btn')
+const emptyMsg = document.getElementById('empty-msg')
 const filterPanel = document.getElementById('filter-panel')
 const filterToggle = document.getElementById('filter-toggle-btn')
-const typeFilter  = document.getElementById('type-filter')
+const typeFilter = document.getElementById('type-filter')
 const categoryFilter = document.getElementById('category-filter')
-const fromFilter  = document.getElementById('from-filter')
-const toFilter    = document.getElementById('to-filter')
-const clearBtn    = document.getElementById('clear-filters-btn')
+const fromFilter = document.getElementById('from-filter')
+const toFilter = document.getElementById('to-filter')
+const clearBtn = document.getElementById('clear-filters-btn')
 
 // ── Helpers ───────────────────────────────────────────────────
 
 function escHtml(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 async function fetchJson(url) {
@@ -36,33 +36,32 @@ async function fetchJson(url) {
 }
 
 function buildParams(page) {
-  const type     = typeFilter.value
+  const type = typeFilter.value
   const category = categoryFilter.value.trim()
-  const from     = fromFilter.value
-  const to       = toFilter.value
+  const from = fromFilter.value
+  const to = toFilter.value
 
   const params = new URLSearchParams({ limit: '12', page: String(page) })
   if (type) params.append('type', type)
-  else      { params.append('type', 'NEWS'); params.append('type', 'ANNOUNCEMENT') }
+  else { params.append('type', 'NEWS'); params.append('type', 'ANNOUNCEMENT') }
   if (category) params.append('category', category)
-  if (from)     params.append('from', new Date(from).toISOString())
-  if (to)       params.append('to', new Date(to + 'T23:59:59').toISOString())
+  if (from) params.append('from', new Date(from).toISOString())
+  if (to) params.append('to', new Date(to + 'T23:59:59').toISOString())
   return params
 }
 
 function cardHtml(item) {
   const typeLabel = item.type === 'ANNOUNCEMENT' ? 'Announcement' : 'News'
-  const dateStr   = item.publishedAt
+  const dateStr = item.publishedAt
     ? new Date(item.publishedAt).toLocaleDateString('en-KE', { dateStyle: 'medium' })
     : ''
   const imgSrc = item.imageUrl || defaultCover(item)
   const imgHtml = `<div class="content-card-img-wrap">
-       <img src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy"
-            onload="this.classList.add('loaded')">
+       <img src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy">
      </div>`
 
   return `
-    <article class="content-card" onclick="openDetail('${escHtml(item.id)}')">
+    <article class="content-card" data-id="${escHtml(item.id)}">
       ${imgHtml}
       <div class="content-card-body">
         <div class="content-card-meta">
@@ -82,7 +81,7 @@ async function loadNews(page = 1, append = false) {
   _page = page
   if (!append) {
     grid.innerHTML = `
-      ${[1,2,3,4,5,6].map(() => `
+      ${[1, 2, 3, 4, 5, 6].map(() => `
         <article class="content-card">
           <div class="content-card-img-skeleton"></div>
           <div class="content-card-body">
@@ -109,22 +108,32 @@ async function loadNews(page = 1, append = false) {
     }
 
     grid.insertAdjacentHTML('beforeend', res.items.map(cardHtml).join(''))
+    grid.querySelectorAll('.content-card-img-wrap img').forEach((img) => {
+      if (img.complete) img.classList.add('loaded')
+      else img.addEventListener('load', () => img.classList.add('loaded'), { once: true })
+    })
 
     _hasMore = res.page < res.pages
     if (_hasMore) loadMoreWrap.classList.remove('hidden')
-    else          loadMoreWrap.classList.add('hidden')
+    else loadMoreWrap.classList.add('hidden')
   } catch (err) {
     if (!append) grid.innerHTML = ''
     toast(err.message || 'Failed to load news', 'error')
   }
 }
 
+// Event delegation for card clicks (CSP-safe — no inline onclick)
+grid.addEventListener('click', (e) => {
+  const card = e.target.closest('.content-card[data-id]')
+  if (card) openDetail(card.dataset.id)
+})
+
 // ── Detail modal ──────────────────────────────────────────────
 
-const modal   = document.getElementById('detail-modal')
+const modal = document.getElementById('detail-modal')
 const detailContent = document.getElementById('detail-content')
 
-window.openDetail = async (id) => {
+async function openDetail(id) {
   detailContent.innerHTML = '<p class="text-muted">Loading…</p>'
   modal.classList.add('open')
   document.body.style.overflow = 'hidden'
@@ -151,13 +160,14 @@ window.openDetail = async (id) => {
   }
 }
 
-window.closeDetail = () => {
+function closeDetail() {
   modal.classList.remove('open')
   document.body.style.overflow = ''
 }
 
+document.getElementById('detail-close-btn').addEventListener('click', closeDetail)
 modal.addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) window.closeDetail()
+  if (e.target === e.currentTarget) closeDetail()
 })
 
 // ── Nav login button ──────────────────────────────────────────
@@ -209,12 +219,12 @@ clearBtn.addEventListener('click', () => {
   toFilter.value = ''
   loadNews(1)
 })
-;[categoryFilter, fromFilter, toFilter].forEach(el => {
-  el.addEventListener('input', () => {
-    clearTimeout(_filterTimer)
-    _filterTimer = setTimeout(() => loadNews(1), 400)
+  ;[categoryFilter, fromFilter, toFilter].forEach(el => {
+    el.addEventListener('input', () => {
+      clearTimeout(_filterTimer)
+      _filterTimer = setTimeout(() => loadNews(1), 400)
+    })
   })
-})
 
 loadMoreBtn.addEventListener('click', () => loadNews(_page + 1, true))
 

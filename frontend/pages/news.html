@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,11 +14,13 @@
   <script type="module" src="/assets/js/pwa.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/base.css">
   <link rel="stylesheet" href="../assets/css/home.css">
   <link rel="stylesheet" href="../assets/css/content.css">
 </head>
+
 <body>
 
   <!-- Site nav (reused from homepage) -->
@@ -49,7 +52,10 @@
       <div class="filter-panel-header">
         <span class="filter-panel-title">Filters</span>
         <button class="filter-panel-toggle" id="filter-toggle-btn" title="Collapse filters" aria-label="Toggle filters">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
         </button>
       </div>
       <div class="filter-panel-body" id="filter-panel-body">
@@ -73,7 +79,8 @@
           <label class="filter-label">To date</label>
           <input type="date" id="to-filter" class="form-input form-input-sm">
         </div>
-        <button class="btn btn-outline btn-sm btn-full" id="clear-filters-btn" style="margin-top:var(--space-sm)">Clear filters</button>
+        <button class="btn btn-outline btn-sm btn-full" id="clear-filters-btn" style="margin-top:var(--space-sm)">Clear
+          filters</button>
       </div>
     </aside>
 
@@ -117,15 +124,19 @@
   <!-- Detail modal -->
   <div id="detail-modal" class="content-detail-overlay" role="dialog" aria-modal="true">
     <div class="content-detail-box">
-      <button class="content-detail-close" onclick="closeDetail()" aria-label="Close">&times;</button>
+      <button class="content-detail-close" id="detail-close-btn" aria-label="Close">&times;</button>
       <div id="detail-content"></div>
     </div>
   </div>
 
   <button class="scroll-top-btn hidden" id="scroll-top-btn" title="Back to top" aria-label="Scroll to top">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
   </button>
 
   <script type="module" src="../assets/js/pages/news.js"></script>
 </body>
+
 </html>

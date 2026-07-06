@@ -357,38 +357,6 @@ tr:last-child td { border-bottom: none; }
 }
 
 /* ── Role modal ── */
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45); z-index: 100;
-  align-items: center; justify-content: center;
-}
-
-.modal-overlay.open { display: flex; }
-
-.modal-box {
-  background: var(--color-surface); border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  padding: var(--space-lg); width: 100%; max-width: 420px;
-  box-shadow: var(--shadow-lg);
-  max-height: 90vh; overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-.modal-box::-webkit-scrollbar { width: 4px; }
-.modal-box::-webkit-scrollbar-track { background: transparent; }
-.modal-box::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
-.modal-box::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
-
-.modal-box h3 { margin-bottom: var(--space-md); color: var(--color-primary); }
-
-/* Tighter form-group spacing inside modals */
-.modal-box .form-group { margin-bottom: var(--space-sm); }
-
-.modal-footer {
-  display: flex; gap: var(--space-md);
-  justify-content: flex-end; margin-top: var(--space-md);
-}
-
 .permission-grid {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: var(--space-sm); margin-top: var(--space-md);
@@ -893,7 +861,6 @@ tr:last-child td { border-bottom: none; }
   /* Non-stacked tables scroll sideways instead of clipping */
   .table-card { overflow-x: auto; }
   .page-content { padding: var(--space-md); }
-  .modal-overlay { padding: var(--space-md); }
   .page-head { flex-wrap: wrap; gap: var(--space-sm); }
 
   /* Profile page — single column, stack label/value pairs */

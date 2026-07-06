@@ -17,21 +17,21 @@ function clearTokens() {
 // ── Session cache ─────────────────────────────────────────────────────────────
 // TTLs keyed by path prefix (longest match wins)
 const CACHE_TTLS = [
-  ['/members/slim',            5 * 60_000],
-  ['/members/pending',         30_000],
+  ['/members/slim', 5 * 60_000],
+  ['/members/pending', 30_000],
   ['/members/update-requests', 30_000],
-  ['/members',                 2 * 60_000],
-  ['/households',              5 * 60_000],
-  ['/ministries',              5 * 60_000],
+  ['/members', 2 * 60_000],
+  ['/households', 5 * 60_000],
+  ['/ministries', 5 * 60_000],
 ]
 
 // Which sessionStorage key prefixes to clear when a write succeeds
 const INVALIDATE_ON_WRITE = [
-  ['/households',   ['/households']],
-  ['/ministries',   ['/ministries']],
-  ['/members',      ['/members']],
+  ['/households', ['/households']],
+  ['/ministries', ['/ministries']],
+  ['/members', ['/members']],
   ['/auth/approve', ['/members/pending', '/members']],
-  ['/auth/reject',  ['/members/pending']],
+  ['/auth/reject', ['/members/pending']],
 ]
 
 function getTtl(path) {
@@ -129,7 +129,7 @@ async function request(method, path, body = null, retry = true) {
     body: body ? JSON.stringify(body) : null,
   })
 
-  if (res.status === 401 && retry) {
+  if (res.status === 401 && retry && token) {
     const refreshed = await refreshAccessToken()
     if (refreshed) return request(method, path, body, false)
     if (!getAccessToken()) window.location.href = '/pages/login.html'
@@ -187,12 +187,12 @@ async function download(path, filename, retry = true) {
 }
 
 export const api = {
-  get:    (path)        => request('GET',    path),
+  get: (path) => request('GET', path),
   download,
-  post:   (path, body)  => request('POST',   path, body),
-  put:    (path, body)  => request('PUT',    path, body),
-  patch:  (path, body)  => request('PATCH',  path, body),
-  delete: (path)        => request('DELETE', path),
+  post: (path, body) => request('POST', path, body),
+  put: (path, body) => request('PUT', path, body),
+  patch: (path, body) => request('PATCH', path, body),
+  delete: (path) => request('DELETE', path),
   saveTokens,
   clearTokens,
   getAccessToken,

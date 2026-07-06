@@ -5,25 +5,25 @@ import {
   setRailBadge, refreshMembersRailBadge, setPendingCount, setUpdateReqCount,
 } from './core.js'
 
-let _modalUserId              = null
-let _editMemberId              = null
-let _editMemberActive          = true
-let _membersCache              = new Map()
-let _editHouseholdId           = null  // household selected in edit-member modal
-let _editHouseholdList         = []    // all households for search picker in edit-member modal
-let _membersPage                = 1     // current page in members list
-let _memberHouseholdFilterId    = ''    // selected household id in members filter
-let _memberHouseholdList        = []    // all households for the members filter picker
+let _modalUserId = null
+let _editMemberId = null
+let _editMemberActive = true
+let _membersCache = new Map()
+let _editHouseholdId = null  // household selected in edit-member modal
+let _editHouseholdList = []    // all households for search picker in edit-member modal
+let _membersPage = 1     // current page in members list
+let _memberHouseholdFilterId = ''    // selected household id in members filter
+let _memberHouseholdList = []    // all households for the members filter picker
 
 // ── Pending approvals ─────────────────────────────────────────
 export async function loadPendingCount() {
   try {
-    const res   = await api.get('/members/pending')
+    const res = await api.get('/members/pending')
     const count = res.pending.length
     setPendingCount(count)
     setRailBadge('pending-badge', count)
     refreshMembersRailBadge()
-  } catch {}
+  } catch { }
 }
 
 export async function loadPending() {
@@ -104,15 +104,15 @@ export async function loadMembersPage() {
 }
 
 async function loadMembers(search = '', status = '', page = _membersPage, householdId = '', ministryId = '') {
-  const container   = document.getElementById('members-list')
-  const pagination  = document.getElementById('members-pagination')
+  const container = document.getElementById('members-list')
+  const pagination = document.getElementById('members-pagination')
   container.innerHTML = skeletonRows()
   try {
     let url = `/members?limit=25&page=${page}`
-    if (search)      url += `&search=${encodeURIComponent(search)}`
-    if (status)      url += `&status=${encodeURIComponent(status)}`
+    if (search) url += `&search=${encodeURIComponent(search)}`
+    if (status) url += `&status=${encodeURIComponent(status)}`
     if (householdId) url += `&householdId=${encodeURIComponent(householdId)}`
-    if (ministryId)  url += `&ministryId=${encodeURIComponent(ministryId)}`
+    if (ministryId) url += `&ministryId=${encodeURIComponent(ministryId)}`
     const res = await api.get(url)
     _membersPage = res.page
 
@@ -128,16 +128,16 @@ async function loadMembers(search = '', status = '', page = _membersPage, househ
         <thead><tr><th>Name</th><th>Contact</th><th>Status</th><th>Role</th><th>Active</th><th></th></tr></thead>
         <tbody>
           ${res.members.map(m => {
-            const isSelf      = m.id === user.userId
-            const isLegend    = m.role === 'LEGEND'
-            const targetLevel = roleLevel(m.role)
-            const actorLevel  = roleLevel(user.role)
-            const canManage   = !isSelf && !isLegend && (
-              user.role === 'SUPER_ADMIN'
-                ? targetLevel < roleLevel('LEGEND')
-                : actorLevel > targetLevel && ['MEMBER', 'STAFF'].includes(m.role)
-            )
-            return `
+      const isSelf = m.id === user.userId
+      const isLegend = m.role === 'LEGEND'
+      const targetLevel = roleLevel(m.role)
+      const actorLevel = roleLevel(user.role)
+      const canManage = !isSelf && !isLegend && (
+        user.role === 'SUPER_ADMIN'
+          ? targetLevel < roleLevel('LEGEND')
+          : actorLevel > targetLevel && ['MEMBER', 'STAFF'].includes(m.role)
+      )
+      return `
               <tr>
                 <td data-label="Name">${memberNameCell(m.profile?.fullName)}</td>
                 <td data-label="Contact">${m.email || m.phone || '—'}</td>
@@ -152,7 +152,7 @@ async function loadMembers(search = '', status = '', page = _membersPage, househ
                 </td>
               </tr>
             `
-          }).join('')}
+    }).join('')}
         </tbody>
       </table>
     `
@@ -174,10 +174,10 @@ async function loadMembers(search = '', status = '', page = _membersPage, househ
 
 function currentMemberFilters() {
   return {
-    search:      document.getElementById('member-search').value.trim(),
-    status:      document.getElementById('member-status-filter').value,
+    search: document.getElementById('member-search').value.trim(),
+    status: document.getElementById('member-status-filter').value,
     householdId: _memberHouseholdFilterId,
-    ministryId:  document.getElementById('member-ministry-filter').value,
+    ministryId: document.getElementById('member-ministry-filter').value,
   }
 }
 
@@ -225,13 +225,13 @@ export function wireMembersPanel() {
       loadMembers(search, status, 1, householdId, ministryId)
     }, 300)
   })
-  ;['member-status-filter', 'member-ministry-filter'].forEach(id => {
-    document.getElementById(id).addEventListener('change', () => {
-      _membersPage = 1
-      const { search, status, householdId, ministryId } = currentMemberFilters()
-      loadMembers(search, status, 1, householdId, ministryId)
+    ;['member-status-filter', 'member-ministry-filter'].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => {
+        _membersPage = 1
+        const { search, status, householdId, ministryId } = currentMemberFilters()
+        loadMembers(search, status, 1, householdId, ministryId)
+      })
     })
-  })
 
   document.getElementById('member-household-filter-search').addEventListener('focus', e => {
     renderMemberHouseholdSearch(e.target.value.trim())
@@ -272,10 +272,10 @@ window.openRoleModal = (userId) => {
   _modalUserId = userId
   const name = m.profile?.fullName || m.email || ''
   document.getElementById('modal-title').textContent = `Manage Role — ${name}`
-  document.getElementById('modal-alert').className   = 'hidden'
+  document.getElementById('modal-alert').className = 'hidden'
 
   const roleSelect = document.getElementById('modal-role')
-  const allowed    = user.role === 'SUPER_ADMIN'
+  const allowed = user.role === 'SUPER_ADMIN'
     ? ['MEMBER', 'STAFF', 'ADMIN', 'SUPER_ADMIN']
     : ['MEMBER', 'STAFF']
   Array.from(roleSelect.options).forEach(o => { o.hidden = !allowed.includes(o.value) })
@@ -298,9 +298,9 @@ function togglePermissions() {
 }
 
 window.saveRole = async () => {
-  const btn     = document.getElementById('modal-save-btn')
+  const btn = document.getElementById('modal-save-btn')
   const alertEl = document.getElementById('modal-alert')
-  const role    = document.getElementById('modal-role').value
+  const role = document.getElementById('modal-role').value
   btn.disabled = true; btn.textContent = 'Saving…'
   alertEl.className = 'hidden'
 
@@ -309,7 +309,7 @@ window.saveRole = async () => {
     body.permissions = {
       manageContent: document.getElementById('perm-manageContent').checked,
       manageGivings: document.getElementById('perm-manageGivings').checked,
-      manageEvents:  document.getElementById('perm-manageEvents').checked,
+      manageEvents: document.getElementById('perm-manageEvents').checked,
       manageMembers: document.getElementById('perm-manageMembers').checked,
     }
   }
@@ -319,7 +319,7 @@ window.saveRole = async () => {
     window.closeRoleModal()
     loadMembers()
   } catch (err) {
-    alertEl.className   = 'alert alert-danger'
+    alertEl.className = 'alert alert-danger'
     alertEl.textContent = err.message || 'Failed to update role'
   } finally {
     btn.disabled = false; btn.textContent = 'Save'
@@ -358,8 +358,8 @@ let _invitesAll = []
 
 function inviteStatus(inv) {
   const expired = inv.expiresAt && new Date(inv.expiresAt) < new Date()
-  const status  = inv.usedAt ? 'Used' : expired ? 'Expired' : 'Active'
-  const cls     = inv.usedAt ? 'badge-inactive' : expired ? 'badge-warning' : 'badge-active'
+  const status = inv.usedAt ? 'Used' : expired ? 'Expired' : 'Active'
+  const cls = inv.usedAt ? 'badge-inactive' : expired ? 'badge-warning' : 'badge-active'
   return { status, cls }
 }
 
@@ -381,8 +381,8 @@ function renderInvitesList() {
     return
   }
 
-  const q      = document.getElementById('invite-search')?.value.trim().toLowerCase() || ''
-  const type   = document.getElementById('invite-type-filter')?.value || ''
+  const q = document.getElementById('invite-search')?.value.trim().toLowerCase() || ''
+  const type = document.getElementById('invite-type-filter')?.value || ''
   const status = document.getElementById('invite-status-filter')?.value || ''
 
   const invites = _invitesAll.filter(inv => {
@@ -402,9 +402,9 @@ function renderInvitesList() {
       <thead><tr><th>Type</th><th>Target</th><th>Expires</th><th>Status</th><th>Created</th><th></th></tr></thead>
       <tbody>
         ${invites.map(inv => {
-          const { status, cls } = inviteStatus(inv)
-          const canRevoke = !inv.usedAt
-          return `<tr>
+    const { status, cls } = inviteStatus(inv)
+    const canRevoke = !inv.usedAt
+    return `<tr>
             <td data-label="Type">${inv.type === 'INDIVIDUAL' ? 'Individual' : 'Mass'}</td>
             <td data-label="Target">${inv.targetEmail ? inv.targetEmail.replace(/(?<=.).(?=[^@]*@)/g, '*') : '—'}</td>
             <td data-label="Expires">${inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString('en-KE') : '—'}</td>
@@ -417,18 +417,18 @@ function renderInvitesList() {
               </div>
             </td>
           </tr>`
-        }).join('')}
+  }).join('')}
       </tbody>
     </table>
   `
 }
 
 window.createInviteLink = async () => {
-  const btn      = document.getElementById('invite-create-btn')
-  const alertEl  = document.getElementById('invite-alert')
+  const btn = document.getElementById('invite-create-btn')
+  const alertEl = document.getElementById('invite-alert')
   const resultEl = document.getElementById('invite-result')
-  const type     = document.querySelector('input[name="invite-type"]:checked').value
-  const email    = document.getElementById('invite-email').value.trim()
+  const type = document.querySelector('input[name="invite-type"]:checked').value
+  const email = document.getElementById('invite-email').value.trim()
 
   alertEl.className = 'hidden'
   resultEl.classList.add('hidden')
@@ -528,21 +528,21 @@ window.openMemberEditModal = async (memberId) => {
     ])
     const p = member.profile
 
-    document.getElementById('edit-firstName').value       = p?.firstName    || ''
-    document.getElementById('edit-lastName').value        = p?.lastName     || ''
-    document.getElementById('edit-middleName').value      = p?.middleName   || ''
-    document.getElementById('edit-phone').value           = member.phone || p?.phone || ''
-    document.getElementById('edit-address').value         = p?.address      || ''
+    document.getElementById('edit-firstName').value = p?.firstName || ''
+    document.getElementById('edit-lastName').value = p?.lastName || ''
+    document.getElementById('edit-middleName').value = p?.middleName || ''
+    document.getElementById('edit-phone').value = member.phone || p?.phone || ''
+    document.getElementById('edit-address').value = p?.address || ''
     document.getElementById('edit-membershipStatus').value = p?.membershipStatus || 'ACTIVE'
-    document.getElementById('edit-dateOfBirth').value     = p?.dateOfBirth  ? p.dateOfBirth.split('T')[0] : ''
-    document.getElementById('edit-dateJoined').value      = p?.dateJoined   ? p.dateJoined.split('T')[0]  : ''
-    document.getElementById('edit-baptismDate').value     = p?.baptismDate  ? p.baptismDate.split('T')[0] : ''
+    document.getElementById('edit-dateOfBirth').value = p?.dateOfBirth ? p.dateOfBirth.split('T')[0] : ''
+    document.getElementById('edit-dateJoined').value = p?.dateJoined ? p.dateJoined.split('T')[0] : ''
+    document.getElementById('edit-baptismDate').value = p?.baptismDate ? p.baptismDate.split('T')[0] : ''
 
     _editHouseholdList = households
-    _editHouseholdId   = p?.household?.id || null
-    const searchInput  = document.getElementById('edit-household-search')
+    _editHouseholdId = p?.household?.id || null
+    const searchInput = document.getElementById('edit-household-search')
     const selectedHint = document.getElementById('edit-household-selected')
-    searchInput.value  = p?.household?.name || ''
+    searchInput.value = p?.household?.name || ''
     selectedHint.textContent = _editHouseholdId ? `Selected: ${p.household.name}` : 'No household assigned'
 
     _editMemberActive = member.isActive
@@ -568,7 +568,7 @@ window.closeMemberEditModal = () => {
 }
 
 window.saveMemberEdit = async () => {
-  const btn     = document.getElementById('member-edit-save-btn')
+  const btn = document.getElementById('member-edit-save-btn')
   const alertEl = document.getElementById('member-edit-alert')
   btn.disabled = true; btn.textContent = 'Saving…'
   alertEl.className = 'hidden'
@@ -576,16 +576,16 @@ window.saveMemberEdit = async () => {
   const toIso = (val) => val ? new Date(val).toISOString() : null
 
   const body = {
-    firstName:        document.getElementById('edit-firstName').value.trim(),
-    lastName:         document.getElementById('edit-lastName').value.trim(),
-    middleName:       document.getElementById('edit-middleName').value.trim() || null,
-    phone:            document.getElementById('edit-phone').value.trim() || undefined,
-    address:          document.getElementById('edit-address').value.trim() || null,
+    firstName: document.getElementById('edit-firstName').value.trim(),
+    lastName: document.getElementById('edit-lastName').value.trim(),
+    middleName: document.getElementById('edit-middleName').value.trim() || null,
+    phone: document.getElementById('edit-phone').value.trim() || undefined,
+    address: document.getElementById('edit-address').value.trim() || null,
     membershipStatus: document.getElementById('edit-membershipStatus').value,
-    dateOfBirth:      toIso(document.getElementById('edit-dateOfBirth').value),
-    dateJoined:       toIso(document.getElementById('edit-dateJoined').value),
-    baptismDate:      toIso(document.getElementById('edit-baptismDate').value),
-    householdId:      _editHouseholdId || null,
+    dateOfBirth: toIso(document.getElementById('edit-dateOfBirth').value),
+    dateJoined: toIso(document.getElementById('edit-dateJoined').value),
+    baptismDate: toIso(document.getElementById('edit-baptismDate').value),
+    householdId: _editHouseholdId || null,
   }
 
   try {
@@ -596,7 +596,7 @@ window.saveMemberEdit = async () => {
       document.getElementById('member-status-filter').value,
     )
   } catch (err) {
-    alertEl.className   = 'alert alert-danger'
+    alertEl.className = 'alert alert-danger'
     alertEl.textContent = err.message || 'Failed to save changes'
   } finally {
     btn.disabled = false; btn.textContent = 'Save Changes'
@@ -604,7 +604,7 @@ window.saveMemberEdit = async () => {
 }
 
 window.toggleMemberActive = async () => {
-  const btn     = document.getElementById('member-deactivate-btn')
+  const btn = document.getElementById('member-deactivate-btn')
   const alertEl = document.getElementById('member-edit-alert')
   btn.disabled = true
   alertEl.className = 'hidden'
@@ -613,14 +613,14 @@ window.toggleMemberActive = async () => {
     await api.post(`/members/${_editMemberId}/${endpoint}`)
     _editMemberActive = !_editMemberActive
     if (_editMemberActive) {
-      btn.textContent  = 'Deactivate Account'
+      btn.textContent = 'Deactivate Account'
       btn.style.cssText = 'border:1px solid var(--color-danger,#dc2626);color:var(--color-danger,#dc2626);background:none;'
     } else {
-      btn.textContent  = 'Reactivate Account'
+      btn.textContent = 'Reactivate Account'
       btn.style.cssText = 'border:1px solid var(--color-success,#16a34a);color:var(--color-success,#16a34a);background:none;'
     }
   } catch (err) {
-    alertEl.className   = 'alert alert-danger'
+    alertEl.className = 'alert alert-danger'
     alertEl.textContent = err.message || 'Failed'
   } finally {
     btn.disabled = false
@@ -656,7 +656,7 @@ document.getElementById('edit-household-results').addEventListener('click', e =>
   const item = e.target.closest('.msd-item')
   if (!item || !item.dataset.id) return
   _editHouseholdId = item.dataset.id
-  document.getElementById('edit-household-search').value  = item.dataset.name
+  document.getElementById('edit-household-search').value = item.dataset.name
   document.getElementById('edit-household-selected').textContent = `Selected: ${item.dataset.name}`
   document.getElementById('edit-household-results').classList.add('hidden')
 })
@@ -677,9 +677,9 @@ document.getElementById('edit-household-search').addEventListener('blur', () => 
 // ── Create member modal ───────────────────────────────────────
 window.openCreateMemberModal = () => {
   document.getElementById('new-firstName').value = ''
-  document.getElementById('new-lastName').value  = ''
-  document.getElementById('new-email').value     = ''
-  document.getElementById('new-phone').value     = ''
+  document.getElementById('new-lastName').value = ''
+  document.getElementById('new-email').value = ''
+  document.getElementById('new-phone').value = ''
   document.getElementById('create-member-alert').className = 'hidden'
   document.getElementById('create-member-modal').classList.add('open')
 }
@@ -689,26 +689,26 @@ window.closeCreateMemberModal = () => {
 }
 
 window.saveNewMember = async () => {
-  const btn     = document.getElementById('create-member-save-btn')
+  const btn = document.getElementById('create-member-save-btn')
   const alertEl = document.getElementById('create-member-alert')
-  const email   = document.getElementById('new-email').value.trim()
+  const email = document.getElementById('new-email').value.trim()
   alertEl.className = 'hidden'
   btn.disabled = true; btn.textContent = 'Adding…'
   try {
     await api.post('/members', {
       firstName: document.getElementById('new-firstName').value.trim(),
-      lastName:  document.getElementById('new-lastName').value.trim(),
+      lastName: document.getElementById('new-lastName').value.trim(),
       email,
-      phone:     document.getElementById('new-phone').value.trim() || undefined,
+      phone: document.getElementById('new-phone').value.trim() || undefined,
     })
-    alertEl.className   = 'alert alert-success'
+    alertEl.className = 'alert alert-success'
     alertEl.textContent = `Member created — a set-password email has been sent to ${email}.`
     loadMembers(
       document.getElementById('member-search').value.trim(),
       document.getElementById('member-status-filter').value,
     )
   } catch (err) {
-    alertEl.className   = 'alert alert-danger'
+    alertEl.className = 'alert alert-danger'
     alertEl.textContent = err.message || 'Failed to create member'
   } finally {
     btn.disabled = false; btn.textContent = 'Add Member'
@@ -733,10 +733,10 @@ export async function loadUpdateRequests() {
         <thead><tr><th>Member</th><th>Field</th><th>Current</th><th>Proposed</th><th>Reason</th><th>Date</th><th></th></tr></thead>
         <tbody>
           ${res.requests.map(r => {
-            const name = r.requestedBy?.profile
-              ? `${r.requestedBy.profile.firstName} ${r.requestedBy.profile.lastName}`
-              : r.requestedBy?.email || '—'
-            return `<tr>
+      const name = r.requestedBy?.profile
+        ? `${r.requestedBy.profile.firstName} ${r.requestedBy.profile.lastName}`
+        : r.requestedBy?.email || '—'
+      return `<tr>
               <td data-label="Member">${escHtml(name)}</td>
               <td data-label="Field">${escHtml(r.field)}</td>
               <td data-label="Current">${r.currentValue ? escHtml(r.currentValue) : '—'}</td>
@@ -750,7 +750,7 @@ export async function loadUpdateRequests() {
                 </div>
               </td>
             </tr>`
-          }).join('')}
+    }).join('')}
         </tbody>
       </table>
     `
@@ -761,12 +761,12 @@ export async function loadUpdateRequests() {
 
 export async function loadUpdateRequestsCount() {
   try {
-    const res   = await api.get('/members/update-requests')
+    const res = await api.get('/members/update-requests')
     const count = res.requests.length
     setUpdateReqCount(count)
     setRailBadge('update-requests-badge', count)
     refreshMembersRailBadge()
-  } catch {}
+  } catch { }
 }
 
 window.approveUpdateRequest = async (id, btn) => {

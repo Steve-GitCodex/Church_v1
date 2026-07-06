@@ -2,10 +2,10 @@ import { api } from '../api.js'
 import { toast, confirmDialog } from '../ui.js'
 import { escHtml, skeletonRows } from './core.js'
 
-let _householdModalId  = null  // null = create, string = rename
+let _householdModalId = null  // null = create, string = rename
 let _householdDetailId = null
-let _householdsCache   = new Map()
-let _householdsAll     = []
+let _householdsCache = new Map()
+let _householdsAll = []
 let _householdAvailableMembers = []
 
 export async function loadHouseholds() {
@@ -83,9 +83,9 @@ window.closeHouseholdModal = () => {
 }
 
 window.saveHousehold = async () => {
-  const btn     = document.getElementById('household-save-btn')
+  const btn = document.getElementById('household-save-btn')
   const alertEl = document.getElementById('household-modal-alert')
-  const name    = document.getElementById('household-name-input').value.trim()
+  const name = document.getElementById('household-name-input').value.trim()
   if (!name) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Name is required.'; return }
   btn.disabled = true; btn.textContent = 'Saving…'
   alertEl.className = 'hidden'
@@ -98,7 +98,7 @@ window.saveHousehold = async () => {
     window.closeHouseholdModal()
     loadHouseholds()
   } catch (err) {
-    alertEl.className   = 'alert alert-danger'
+    alertEl.className = 'alert alert-danger'
     alertEl.textContent = err.message || 'Failed to save'
   } finally {
     btn.disabled = false; btn.textContent = 'Save'

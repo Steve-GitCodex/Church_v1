@@ -78,6 +78,7 @@ export async function listContent(req, res, next) {
     const includeClause = {
       author: { select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } } },
       ...(userId ? { reads: { where: { userId }, select: { id: true } } } : {}),
+      ...(userId ? { registrations: { where: { userId }, select: { id: true } } } : {}),
     }
 
     const [total, items] = await Promise.all([
@@ -91,7 +92,8 @@ export async function listContent(req, res, next) {
       pages: Math.ceil(total / Number(limit)) || 1,
       items: items.map(item => {
         const isNew = userId ? item.reads?.length === 0 : undefined
-        return formatItem(item, isNew)
+        const isRegistered = (userId && item.type === 'EVENT') ? item.registrations?.length > 0 : undefined
+        return formatItem(item, isNew, isRegistered)
       }),
     })
   } catch (err) {
@@ -230,18 +232,18 @@ export async function getContent(req, res, next) {
 export async function createContent(req, res, next) {
   try {
     const schema = z.object({
-      type:             z.enum(['NEWS', 'ANNOUNCEMENT', 'EVENT']),
-      title:            z.string().min(1).max(255),
-      body:             z.string().min(1),
-      imageUrl:         z.string().url().optional().nullable(),
-      category:         z.string().max(100).optional().nullable(),
-      eventDate:        z.string().datetime().optional().nullable(),
-      eventEndDate:     z.string().datetime().optional().nullable(),
-      location:         z.string().max(255).optional().nullable(),
-      maxAttendees:     z.number().int().positive().optional().nullable(),
+      type: z.enum(['NEWS', 'ANNOUNCEMENT', 'EVENT']),
+      title: z.string().min(1).max(255),
+      body: z.string().min(1),
+      imageUrl: z.string().url().optional().nullable(),
+      category: z.string().max(100).optional().nullable(),
+      eventDate: z.string().datetime().optional().nullable(),
+      eventEndDate: z.string().datetime().optional().nullable(),
+      location: z.string().max(255).optional().nullable(),
+      maxAttendees: z.number().int().positive().optional().nullable(),
       registrationOpen: z.boolean().optional(),
-      ticketPrice:      z.number().nonnegative().optional().nullable(),
-      isFeatured:       z.boolean().optional(),
+      ticketPrice: z.number().nonnegative().optional().nullable(),
+      isFeatured: z.boolean().optional(),
     })
     const data = schema.parse(req.body)
     if (!canManageItemType(req.user, data.type)) {
@@ -250,20 +252,20 @@ export async function createContent(req, res, next) {
 
     const item = await prisma.content.create({
       data: {
-        type:             data.type,
-        title:            data.title,
-        body:             sanitize(data.body),
-        imageUrl:         data.imageUrl ?? null,
-        category:         data.category ?? null,
-        eventDate:        data.eventDate ? new Date(data.eventDate) : null,
-        eventEndDate:     data.eventEndDate ? new Date(data.eventEndDate) : null,
-        location:         data.location ?? null,
-        maxAttendees:     data.maxAttendees ?? null,
+        type: data.type,
+        title: data.title,
+        body: sanitize(data.body),
+        imageUrl: data.imageUrl ?? null,
+        category: data.category ?? null,
+        eventDate: data.eventDate ? new Date(data.eventDate) : null,
+        eventEndDate: data.eventEndDate ? new Date(data.eventEndDate) : null,
+        location: data.location ?? null,
+        maxAttendees: data.maxAttendees ?? null,
         registrationOpen: data.registrationOpen ?? false,
-        ticketPrice:      data.ticketPrice ?? null,
-        isFeatured:       data.isFeatured ?? false,
-        authorId:         req.user.userId,
-        status:           'DRAFT',
+        ticketPrice: data.ticketPrice ?? null,
+        isFeatured: data.isFeatured ?? false,
+        authorId: req.user.userId,
+        status: 'DRAFT',
       },
     })
 
@@ -279,17 +281,17 @@ export async function createContent(req, res, next) {
 export async function updateContent(req, res, next) {
   try {
     const schema = z.object({
-      title:            z.string().min(1).max(255).optional(),
-      body:             z.string().min(1).optional(),
-      imageUrl:         z.string().url().optional().nullable(),
-      category:         z.string().max(100).optional().nullable(),
-      eventDate:        z.string().datetime().optional().nullable(),
-      eventEndDate:     z.string().datetime().optional().nullable(),
-      location:         z.string().max(255).optional().nullable(),
-      maxAttendees:     z.number().int().positive().optional().nullable(),
+      title: z.string().min(1).max(255).optional(),
+      body: z.string().min(1).optional(),
+      imageUrl: z.string().url().optional().nullable(),
+      category: z.string().max(100).optional().nullable(),
+      eventDate: z.string().datetime().optional().nullable(),
+      eventEndDate: z.string().datetime().optional().nullable(),
+      location: z.string().max(255).optional().nullable(),
+      maxAttendees: z.number().int().positive().optional().nullable(),
       registrationOpen: z.boolean().optional(),
-      ticketPrice:      z.number().nonnegative().optional().nullable(),
-      isFeatured:       z.boolean().optional(),
+      ticketPrice: z.number().nonnegative().optional().nullable(),
+      isFeatured: z.boolean().optional(),
     })
     const data = schema.parse(req.body)
 
@@ -302,14 +304,14 @@ export async function updateContent(req, res, next) {
 
     const updateData = {}
     if (data.title !== undefined) updateData.title = data.title
-    if (data.body !== undefined)  updateData.body = sanitize(data.body)
-    if ('imageUrl' in data)       updateData.imageUrl = data.imageUrl ?? null
-    if ('category' in data)       updateData.category = data.category ?? null
-    if ('location' in data)       updateData.location = data.location ?? null
-    if ('maxAttendees' in data)   updateData.maxAttendees = data.maxAttendees ?? null
-    if ('eventDate' in data)      updateData.eventDate = data.eventDate ? new Date(data.eventDate) : null
-    if ('eventEndDate' in data)   updateData.eventEndDate = data.eventEndDate ? new Date(data.eventEndDate) : null
-    if ('ticketPrice' in data)    updateData.ticketPrice = data.ticketPrice ?? null
+    if (data.body !== undefined) updateData.body = sanitize(data.body)
+    if ('imageUrl' in data) updateData.imageUrl = data.imageUrl ?? null
+    if ('category' in data) updateData.category = data.category ?? null
+    if ('location' in data) updateData.location = data.location ?? null
+    if ('maxAttendees' in data) updateData.maxAttendees = data.maxAttendees ?? null
+    if ('eventDate' in data) updateData.eventDate = data.eventDate ? new Date(data.eventDate) : null
+    if ('eventEndDate' in data) updateData.eventEndDate = data.eventEndDate ? new Date(data.eventEndDate) : null
+    if ('ticketPrice' in data) updateData.ticketPrice = data.ticketPrice ?? null
     if (data.registrationOpen !== undefined) updateData.registrationOpen = data.registrationOpen
     if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured
 

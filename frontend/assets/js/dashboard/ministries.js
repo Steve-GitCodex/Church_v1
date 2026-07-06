@@ -2,33 +2,33 @@ import { api } from '../api.js'
 import { toast, confirmDialog } from '../ui.js'
 import { escHtml, skeletonRows } from './core.js'
 
-let _ministryModalId  = null  // null = create, string = edit
+let _ministryModalId = null  // null = create, string = edit
 let _ministryDetailId = null
 const DEFAULT_MINISTRY_ROLES = [
-  { name: 'ChairPerson',      max: 1 },
+  { name: 'ChairPerson', max: 1 },
   { name: 'Vice Chairperson', max: 1 },
-  { name: 'Treasurer',        max: 1 },
-  { name: 'Secretary',        max: 1 },
-  { name: 'Vice Secretary',   max: 1 },
-  { name: 'Coordinator',      max: 1 },
+  { name: 'Treasurer', max: 1 },
+  { name: 'Secretary', max: 1 },
+  { name: 'Vice Secretary', max: 1 },
+  { name: 'Coordinator', max: 1 },
 ]
 
-let _ministriesCache  = new Map()
+let _ministriesCache = new Map()
 let _ministryAvailableMembers = []
-let _ministrySelectedMember   = null  // { profileId, fullName }
-let _ministryRoles            = []    // {name, max}[] being edited in the create/edit modal
-let _ministryCurrentMembers   = []    // active members loaded in detail modal, for capacity display
-let _ministriesPage           = 1     // current page in ministries list (client-side)
-let _ministriesAll            = []    // full list loaded from server, sliced for display
-const MINISTRIES_PER_PAGE     = 10
+let _ministrySelectedMember = null  // { profileId, fullName }
+let _ministryRoles = []    // {name, max}[] being edited in the create/edit modal
+let _ministryCurrentMembers = []    // active members loaded in detail modal, for capacity display
+let _ministriesPage = 1     // current page in ministries list (client-side)
+let _ministriesAll = []    // full list loaded from server, sliced for display
+const MINISTRIES_PER_PAGE = 10
 
 export async function loadMinistries() {
-  const container  = document.getElementById('ministries-list')
+  const container = document.getElementById('ministries-list')
   const pagination = document.getElementById('ministries-pagination')
   container.innerHTML = skeletonRows()
   try {
     const ministries = await api.get('/ministries')
-    _ministriesAll   = ministries
+    _ministriesAll = ministries
     _ministriesCache = new Map(ministries.map(m => [m.id, m]))
     renderMinistriesPage()
   } catch {
@@ -38,7 +38,7 @@ export async function loadMinistries() {
 }
 
 function getFilteredMinistries() {
-  const q      = document.getElementById('ministry-search')?.value.trim().toLowerCase() || ''
+  const q = document.getElementById('ministry-search')?.value.trim().toLowerCase() || ''
   const active = document.getElementById('ministry-active-filter')?.value || ''
   return _ministriesAll.filter(m => {
     if (active === '1' && !m.isActive) return false
@@ -49,7 +49,7 @@ function getFilteredMinistries() {
 }
 
 function renderMinistriesPage() {
-  const container  = document.getElementById('ministries-list')
+  const container = document.getElementById('ministries-list')
   const pagination = document.getElementById('ministries-pagination')
   if (!_ministriesAll.length) {
     container.innerHTML = '<p class="text-muted" style="padding:var(--space-lg)">No ministries yet.</p>'
@@ -63,7 +63,7 @@ function renderMinistriesPage() {
     return
   }
   const totalPages = Math.ceil(filtered.length / MINISTRIES_PER_PAGE)
-  _ministriesPage  = Math.min(_ministriesPage, totalPages)
+  _ministriesPage = Math.min(_ministriesPage, totalPages)
   const slice = filtered.slice((_ministriesPage - 1) * MINISTRIES_PER_PAGE, _ministriesPage * MINISTRIES_PER_PAGE)
   container.innerHTML = `
     <table class="table-stack">
@@ -147,9 +147,9 @@ window.closeMinistryModal = () => {
 }
 
 window.saveMinistry = async () => {
-  const btn     = document.getElementById('ministry-save-btn')
+  const btn = document.getElementById('ministry-save-btn')
   const alertEl = document.getElementById('ministry-modal-alert')
-  const name    = document.getElementById('ministry-name-input').value.trim()
+  const name = document.getElementById('ministry-name-input').value.trim()
   if (!name) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Name is required.'; return }
   btn.disabled = true; btn.textContent = 'Saving…'
   alertEl.className = 'hidden'
@@ -157,8 +157,8 @@ window.saveMinistry = async () => {
   const body = {
     name,
     description: document.getElementById('ministry-desc-input').value.trim() || null,
-    isActive:    document.getElementById('ministry-active-input').checked,
-    roles:       _ministryRoles,
+    isActive: document.getElementById('ministry-active-input').checked,
+    roles: _ministryRoles,
   }
 
   try {
@@ -171,7 +171,7 @@ window.saveMinistry = async () => {
     _ministriesPage = 1
     loadMinistries()
   } catch (err) {
-    alertEl.className   = 'alert alert-danger'
+    alertEl.className = 'alert alert-danger'
     alertEl.textContent = err.message || 'Failed to save'
   } finally {
     btn.disabled = false; btn.textContent = 'Save'
@@ -213,8 +213,8 @@ window.openMinistryDetail = async (id) => {
     // Sort by role power — order matches the ministry's roles array; no role = last
     const ministry = _ministriesCache.get(id)
     const roleOrder = (ministry?.roles?.length ? ministry.roles : DEFAULT_MINISTRY_ROLES).map(r => r.name)
-    const roleRank  = role => { const i = roleOrder.indexOf(role); return i === -1 ? roleOrder.length : i }
-    const sorted    = [...members].sort((a, b) => roleRank(a.role) - roleRank(b.role))
+    const roleRank = role => { const i = roleOrder.indexOf(role); return i === -1 ? roleOrder.length : i }
+    const sorted = [...members].sort((a, b) => roleRank(a.role) - roleRank(b.role))
 
     document.getElementById('ministry-detail-members').innerHTML = sorted.length
       ? sorted.map(m => `
@@ -228,7 +228,7 @@ window.openMinistryDetail = async (id) => {
         `).join('')
       : '<p class="text-muted">No members in this ministry.</p>'
 
-    _ministryAvailableMembers  = slimMembers
+    _ministryAvailableMembers = slimMembers
       .filter(m => !assignedProfileIds.has(m.profileId))
     _ministryCurrentMembers = members
 
@@ -238,7 +238,7 @@ window.openMinistryDetail = async (id) => {
     const roleSelect = document.getElementById('ministry-assign-role')
     roleSelect.innerHTML = [{ name: 'Member', max: null }, ...roles].map(r => {
       const count = roleCounts[r.name] || 0
-      const full  = r.max != null && count >= r.max
+      const full = r.max != null && count >= r.max
       const label = r.max != null ? `${r.name} (${count}/${r.max})` : r.name
       return `<option value="${escHtml(r.name)}" ${full ? 'disabled' : ''}>${escHtml(label)}</option>`
     }).join('')
@@ -297,7 +297,7 @@ window.clearMinistrySelection = () => {
 
 window.addSelectedMinistryMember = async () => {
   if (!_ministrySelectedMember) return
-  const btn  = document.getElementById('ministry-add-btn')
+  const btn = document.getElementById('ministry-add-btn')
   const role = document.getElementById('ministry-assign-role').value.trim() || 'Member'
   btn.disabled = true; btn.textContent = 'Adding…'
   try {
@@ -317,19 +317,19 @@ window.addSelectedMinistryMember = async () => {
 window.openEditMinistryMemberRole = (membershipId, currentRole) => {
   const row = document.getElementById(`mm-row-${membershipId}`)
   if (!row) return
-  const ministry  = _ministriesCache.get(_ministryDetailId)
-  const roles     = ministry?.roles?.length ? ministry.roles : DEFAULT_MINISTRY_ROLES
+  const ministry = _ministriesCache.get(_ministryDetailId)
+  const roles = ministry?.roles?.length ? ministry.roles : DEFAULT_MINISTRY_ROLES
   const roleCounts = {}
   _ministryCurrentMembers
     .filter(m => m.id !== membershipId)
     .forEach(m => { if (m.role && m.role !== 'Member') roleCounts[m.role] = (roleCounts[m.role] || 0) + 1 })
   const options = [{ name: 'Member', max: null }, ...roles].map(r => {
     const count = roleCounts[r.name] || 0
-    const full  = r.max != null && count >= r.max
+    const full = r.max != null && count >= r.max
     const label = r.max != null ? `${r.name} (${count}/${r.max})` : r.name
     return `<option value="${escHtml(r.name)}" ${r.name === currentRole ? 'selected' : ''} ${full ? 'disabled' : ''}>${escHtml(label)}</option>`
   }).join('')
-  const roleEl    = document.getElementById(`mm-role-${membershipId}`)
+  const roleEl = document.getElementById(`mm-role-${membershipId}`)
   const actionDiv = row.querySelector('.action-btns')
   roleEl.outerHTML = `<select id="mm-role-input-${membershipId}" class="form-select" style="width:160px;padding:0.3rem 0.5rem;font-size:var(--font-size-sm);display:inline-block;">${options}</select>`
   actionDiv.innerHTML = `
@@ -340,7 +340,7 @@ window.openEditMinistryMemberRole = (membershipId, currentRole) => {
 
 window.saveMinistryMemberRole = async (membershipId) => {
   const input = document.getElementById(`mm-role-input-${membershipId}`)
-  const role  = input?.value.trim()
+  const role = input?.value.trim()
   if (!role) return
   try {
     await api.patch(`/ministries/${_ministryDetailId}/members/${membershipId}`, { role })
@@ -382,7 +382,7 @@ document.getElementById('ministry-roles-chips').addEventListener('click', e => {
 
 window.addMinistryRoleChip = () => {
   const nameInput = document.getElementById('ministry-new-role-input')
-  const maxInput  = document.getElementById('ministry-new-role-max')
+  const maxInput = document.getElementById('ministry-new-role-max')
   const name = nameInput.value.trim()
   if (!name) return
   if (_ministryRoles.some(r => r.name.toLowerCase() === name.toLowerCase())) {

@@ -8,7 +8,7 @@ export function canManageItemType(user, itemType) {
   return false
 }
 
-export function formatItem(item, isNew) {
+export function formatItem(item, isNew, isRegistered) {
   return {
     id: item.id,
     type: item.type,
@@ -33,5 +33,6 @@ export function formatItem(item, isNew) {
       name: item.author.profile ? `${item.author.profile.firstName} ${item.author.profile.lastName}` : item.author.email,
     } : undefined,
     isNew: isNew,
+    isRegistered: isRegistered,
   }
 }

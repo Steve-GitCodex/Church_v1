@@ -7,19 +7,20 @@ let _hasMore = false
 let _currentId = null
 let _filterTimer = null
 const PANEL_KEY = 'aicr_filter_collapsed'
+const _eventsCache = new Map() // id -> item, kept in sync so grid cards can update live
 
 // ── DOM refs ──────────────────────────────────────────────────
-const grid         = document.getElementById('events-grid')
+const grid = document.getElementById('events-grid')
 const loadMoreWrap = document.getElementById('load-more-wrap')
-const loadMoreBtn  = document.getElementById('load-more-btn')
-const emptyMsg     = document.getElementById('empty-msg')
-const filterPanel  = document.getElementById('filter-panel')
+const loadMoreBtn = document.getElementById('load-more-btn')
+const emptyMsg = document.getElementById('empty-msg')
+const filterPanel = document.getElementById('filter-panel')
 const filterToggle = document.getElementById('filter-toggle-btn')
 const categoryFilter = document.getElementById('category-filter')
-const fromFilter   = document.getElementById('from-filter')
-const toFilter     = document.getElementById('to-filter')
-const clearBtn     = document.getElementById('clear-filters-btn')
-const modal        = document.getElementById('detail-modal')
+const fromFilter = document.getElementById('from-filter')
+const toFilter = document.getElementById('to-filter')
+const clearBtn = document.getElementById('clear-filters-btn')
+const modal = document.getElementById('detail-modal')
 const detailContent = document.getElementById('detail-content')
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -29,7 +30,7 @@ function getToken() {
 }
 
 function escHtml(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 async function apiFetch(path, options = {}) {
@@ -50,14 +51,22 @@ async function apiFetch(path, options = {}) {
 
 function buildParams(page) {
   const category = categoryFilter.value.trim()
-  const from     = fromFilter.value
-  const to       = toFilter.value
+  const from = fromFilter.value
+  const to = toFilter.value
 
   const params = new URLSearchParams({ type: 'EVENT', sort: 'eventDate', limit: '12', page: String(page) })
   if (category) params.append('category', category)
-  if (from)     params.append('from', new Date(from).toISOString())
-  if (to)       params.append('to', new Date(to + 'T23:59:59').toISOString())
+  if (from) params.append('from', new Date(from).toISOString())
+  if (to) params.append('to', new Date(to + 'T23:59:59').toISOString())
   return params
+}
+
+function rsvpPillHtml(item) {
+  return item.isRegistered
+    ? '<span class="content-card-registered-pill">&#10003; Registered</span>'
+    : item.registrationOpen
+      ? '<span class="content-card-rsvp-pill">RSVP Open</span>'
+      : ''
 }
 
 function cardHtml(item) {
@@ -66,25 +75,21 @@ function cardHtml(item) {
     : item.publishedAt
       ? new Date(item.publishedAt).toLocaleDateString('en-KE', { dateStyle: 'medium' })
       : ''
-  const rsvpPill = item.registrationOpen
-    ? '<span class="content-card-rsvp-pill">RSVP Open</span>'
-    : ''
   const pricePill = item.ticketPrice != null && Number(item.ticketPrice) > 0
     ? `<span class="content-card-price-pill">KES ${Number(item.ticketPrice).toLocaleString()}</span>`
     : '<span class="content-card-price-pill free">Free</span>'
   const imgSrc = item.imageUrl || defaultCover(item)
   const imgHtml = `<div class="content-card-img-wrap">
-       <img src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy"
-            onload="this.classList.add('loaded')">
+       <img src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" loading="lazy">
      </div>`
 
   return `
-    <article class="content-card" onclick="openDetail('${escHtml(item.id)}')">
+    <article class="content-card" data-id="${escHtml(item.id)}">
       ${imgHtml}
       <div class="content-card-body">
         <div class="content-card-meta">
           <span class="content-card-type">Event</span>
-          ${rsvpPill}
+          <span class="content-card-rsvp-slot">${rsvpPillHtml(item)}</span>
           ${pricePill}
         </div>
         <h3 class="content-card-title">${escHtml(item.title)}</h3>
@@ -102,7 +107,7 @@ async function loadEvents(page = 1, append = false) {
   _page = page
   if (!append) {
     grid.innerHTML = `
-      ${[1,2,3,4,5,6].map(() => `
+      ${[1, 2, 3, 4, 5, 6].map(() => `
         <article class="content-card">
           <div class="content-card-img-skeleton"></div>
           <div class="content-card-body">
@@ -129,19 +134,30 @@ async function loadEvents(page = 1, append = false) {
     }
 
     grid.insertAdjacentHTML('beforeend', res.items.map(cardHtml).join(''))
+    res.items.forEach(item => _eventsCache.set(item.id, item))
+    grid.querySelectorAll('.content-card-img-wrap img').forEach((img) => {
+      if (img.complete) img.classList.add('loaded')
+      else img.addEventListener('load', () => img.classList.add('loaded'), { once: true })
+    })
 
     _hasMore = res.page < res.pages
     if (_hasMore) loadMoreWrap.classList.remove('hidden')
-    else          loadMoreWrap.classList.add('hidden')
+    else loadMoreWrap.classList.add('hidden')
   } catch (err) {
     if (!append) grid.innerHTML = ''
     toast(err.message || 'Failed to load events', 'error')
   }
 }
 
+// Event delegation for card clicks (CSP-safe — no inline onclick)
+grid.addEventListener('click', (e) => {
+  const card = e.target.closest('.content-card[data-id]')
+  if (card) openDetail(card.dataset.id)
+})
+
 // ── Detail modal ──────────────────────────────────────────────
 
-window.openDetail = async (id) => {
+async function openDetail(id) {
   _currentId = id
   detailContent.innerHTML = '<p class="text-muted">Loading…</p>'
   modal.classList.add('open')
@@ -180,14 +196,14 @@ async function renderDetail(id) {
           <div class="event-rsvp-bar">
             <span>${count} attendee${count !== 1 ? 's' : ''}</span>
             <span class="content-card-type" style="color:var(--color-success,#22c55e);">You're registered &#10003;</span>
-            <button class="btn btn-outline btn-sm" id="rsvp-btn" onclick="handleCancelRsvp('${id}')" style="color:var(--color-danger)">Cancel RSVP</button>
+            <button class="btn btn-outline btn-sm" id="rsvp-btn" style="color:var(--color-danger)">Cancel RSVP</button>
           </div>
         `
       } else {
         rsvpSection = `
           <div class="event-rsvp-bar">
             <span>${count} attendee${count !== 1 ? 's' : ''}</span>
-            <button class="btn btn-primary btn-sm" id="rsvp-btn" onclick="handleRsvp('${id}')">RSVP</button>
+            <button class="btn btn-primary btn-sm" id="rsvp-btn">RSVP</button>
           </div>
         `
       }
@@ -206,18 +222,34 @@ async function renderDetail(id) {
       ${rsvpSection}
       <div class="content-detail-body">${item.body || ''}</div>
     `
+
+    const rsvpBtn = document.getElementById('rsvp-btn')
+    if (rsvpBtn) {
+      rsvpBtn.addEventListener('click', () => (item.isRegistered ? handleCancelRsvp(id) : handleRsvp(id)))
+    }
   } catch (err) {
     detailContent.innerHTML = '<p class="text-muted">Failed to load event details.</p>'
     toast(err.message || 'Failed to load event', 'error')
   }
 }
 
-window.handleRsvp = async (id) => {
+// Updates the cached item + the corresponding grid card in place, so the listing
+// reflects an RSVP change immediately without needing a reload.
+function updateCardRsvpState(id, isRegistered) {
+  const item = _eventsCache.get(id)
+  if (item) item.isRegistered = isRegistered
+  const card = grid.querySelector(`.content-card[data-id="${CSS.escape(id)}"]`)
+  const slot = card?.querySelector('.content-card-rsvp-slot')
+  if (slot) slot.innerHTML = rsvpPillHtml(item || { isRegistered })
+}
+
+async function handleRsvp(id) {
   const btn = document.getElementById('rsvp-btn')
   if (btn) { btn.disabled = true; btn.textContent = 'Registering…' }
   try {
     await apiFetch(`/content/${id}/rsvp`, { method: 'POST', body: {} })
     await renderDetail(id)
+    updateCardRsvpState(id, true)
   } catch (err) {
     if (err.status === 401) { window.location.href = 'login.html'; return }
     if (btn) { btn.disabled = false; btn.textContent = 'RSVP' }
@@ -225,7 +257,7 @@ window.handleRsvp = async (id) => {
   }
 }
 
-window.handleCancelRsvp = async (id) => {
+async function handleCancelRsvp(id) {
   const confirmed = await confirmDialog({
     title: 'Cancel RSVP',
     message: 'Cancel your registration for this event?',
@@ -239,20 +271,22 @@ window.handleCancelRsvp = async (id) => {
   try {
     await apiFetch(`/content/${id}/rsvp`, { method: 'DELETE' })
     await renderDetail(id)
+    updateCardRsvpState(id, false)
   } catch (err) {
     if (btn) { btn.disabled = false; btn.textContent = 'Cancel RSVP' }
     toast(err.message || 'Failed to cancel', 'error')
   }
 }
 
-window.closeDetail = () => {
+function closeDetail() {
   modal.classList.remove('open')
   document.body.style.overflow = ''
   _currentId = null
 }
 
+document.getElementById('detail-close-btn').addEventListener('click', closeDetail)
 modal.addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) window.closeDetail()
+  if (e.target === e.currentTarget) closeDetail()
 })
 
 // ── Nav login button ──────────────────────────────────────────
@@ -275,7 +309,7 @@ scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior:
 
 function applyPanelState(collapsed) {
   if (collapsed) filterPanel.classList.add('collapsed')
-  else           filterPanel.classList.remove('collapsed')
+  else filterPanel.classList.remove('collapsed')
   filterToggle.style.transform = collapsed ? 'rotate(180deg)' : ''
 }
 
@@ -298,12 +332,12 @@ clearBtn.addEventListener('click', () => {
   toFilter.value = ''
   loadEvents(1)
 })
-;[categoryFilter, fromFilter, toFilter].forEach(el => {
-  el.addEventListener('input', () => {
-    clearTimeout(_filterTimer)
-    _filterTimer = setTimeout(() => loadEvents(1), 400)
+  ;[categoryFilter, fromFilter, toFilter].forEach(el => {
+    el.addEventListener('input', () => {
+      clearTimeout(_filterTimer)
+      _filterTimer = setTimeout(() => loadEvents(1), 400)
+    })
   })
-})
 
 loadMoreBtn.addEventListener('click', () => loadEvents(_page + 1, true))
 

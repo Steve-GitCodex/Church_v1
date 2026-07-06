@@ -33,12 +33,12 @@ export async function loadGivingReports() {
     yearSel.addEventListener('change', loadSummaryReport)
     document.getElementById('report-project').addEventListener('change', loadRangeReport)
     let timer = null
-    ;['report-from', 'report-to'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => {
-        clearTimeout(timer)
-        timer = setTimeout(loadRangeReport, 400)
+      ;['report-from', 'report-to'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          clearTimeout(timer)
+          timer = setTimeout(loadRangeReport, 400)
+        })
       })
-    })
   }
 
   loadSummaryReport()
@@ -46,7 +46,7 @@ export async function loadGivingReports() {
 }
 
 async function loadSummaryReport() {
-  const cardsEl  = document.getElementById('summary-cards')
+  const cardsEl = document.getElementById('summary-cards')
   const tablesEl = document.getElementById('summary-tables')
   tablesEl.innerHTML = skeletonRows()
   try {
@@ -85,16 +85,16 @@ async function loadSummaryReport() {
 }
 
 async function loadRangeReport() {
-  const totalEl  = document.getElementById('report-total')
+  const totalEl = document.getElementById('report-total')
   const tablesEl = document.getElementById('report-tables')
   tablesEl.innerHTML = skeletonRows()
   try {
     const params = new URLSearchParams()
     const from = document.getElementById('report-from').value
-    const to   = document.getElementById('report-to').value
+    const to = document.getElementById('report-to').value
     const projectId = document.getElementById('report-project').value
-    if (from)      params.append('from', new Date(from).toISOString())
-    if (to)        params.append('to', new Date(to + 'T23:59:59').toISOString())
+    if (from) params.append('from', new Date(from).toISOString())
+    if (to) params.append('to', new Date(to + 'T23:59:59').toISOString())
     if (projectId) params.append('projectId', projectId)
 
     const res = await api.get(`/givings/report?${params.toString()}`)
@@ -136,7 +136,7 @@ let _correctionGivingId = null
 
 export async function loadMyGivings() {
   const summaryEl = document.getElementById('my-givings-summary')
-  const listEl    = document.getElementById('my-givings-list')
+  const listEl = document.getElementById('my-givings-list')
   listEl.innerHTML = skeletonRows()
   loadMyPledges()
   try {
@@ -222,7 +222,7 @@ async function loadMyPledges() {
 }
 
 let _pledgeFilterMemberId = ''
-let _pledgeSlimMembers    = []
+let _pledgeSlimMembers = []
 
 export async function loadPledgesAdmin() {
   const el = document.getElementById('pledges-list')
@@ -237,9 +237,9 @@ export async function loadPledgesAdmin() {
     }
 
     const params = new URLSearchParams()
-    if (_pledgeFilterMemberId)                                       params.append('memberId', _pledgeFilterMemberId)
-    if (document.getElementById('pledge-project-filter')?.value)     params.append('projectId', document.getElementById('pledge-project-filter').value)
-    if (document.getElementById('pledge-status-filter')?.value)      params.append('status', document.getElementById('pledge-status-filter').value)
+    if (_pledgeFilterMemberId) params.append('memberId', _pledgeFilterMemberId)
+    if (document.getElementById('pledge-project-filter')?.value) params.append('projectId', document.getElementById('pledge-project-filter').value)
+    if (document.getElementById('pledge-status-filter')?.value) params.append('status', document.getElementById('pledge-status-filter').value)
 
     const res = await api.get('/givings/pledges?' + params.toString())
     if (!res.pledges.length) {
@@ -395,8 +395,8 @@ document.getElementById('pledge-modal')?.addEventListener('click', e => {
 window.openCorrectionRequestModal = (givingId, giving) => {
   _correctionGivingId = givingId
   document.getElementById('correction-request-alert').className = 'hidden'
-  document.getElementById('correction-reason-input').value    = ''
-  document.getElementById('correction-amount-input').value    = ''
+  document.getElementById('correction-reason-input').value = ''
+  document.getElementById('correction-amount-input').value = ''
   document.getElementById('correction-reference-input').value = ''
   document.getElementById('correction-giving-summary').innerHTML = `
     <div><strong>Project:</strong> ${escHtml(giving.projectName || '—')}</div>
@@ -414,18 +414,18 @@ window.closeCorrectionRequestModal = () => {
 }
 
 window.submitCorrectionRequest = async () => {
-  const btn     = document.getElementById('correction-request-save-btn')
+  const btn = document.getElementById('correction-request-save-btn')
   const alertEl = document.getElementById('correction-request-alert')
-  const reason  = document.getElementById('correction-reason-input').value.trim()
-  const amount  = document.getElementById('correction-amount-input').value.trim()
-  const ref     = document.getElementById('correction-reference-input').value.trim()
+  const reason = document.getElementById('correction-reason-input').value.trim()
+  const amount = document.getElementById('correction-amount-input').value.trim()
+  const ref = document.getElementById('correction-reference-input').value.trim()
   alertEl.className = 'hidden'
   if (!reason) {
     alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Reason is required.'; return
   }
   const proposedData = {}
-  if (amount)  proposedData.amount    = parseFloat(amount)
-  if (ref)     proposedData.reference = ref
+  if (amount) proposedData.amount = parseFloat(amount)
+  if (ref) proposedData.reference = ref
   btn.disabled = true; btn.textContent = 'Submitting…'
   try {
     await api.post(`/givings/${_correctionGivingId}/request-update`, { reason, proposedData })
@@ -445,17 +445,17 @@ document.getElementById('correction-request-modal').addEventListener('click', e 
 
 // ── Givings Ledger (admin view) ───────────────────────────────
 
-let _ledgerPage          = 1
+let _ledgerPage = 1
 let _ledgerMemberFilterId = ''
-let _ledgerSlimMembers    = []
-let _givingEditId         = null
-let _givingModalMembers   = []
+let _ledgerSlimMembers = []
+let _givingEditId = null
+let _givingModalMembers = []
 
 export async function loadGivingsLedger(page = 1) {
   _ledgerPage = page
-  const listEl    = document.getElementById('ledger-list')
-  const pagEl     = document.getElementById('ledger-pagination')
-  const totalEl   = document.getElementById('ledger-total')
+  const listEl = document.getElementById('ledger-list')
+  const pagEl = document.getElementById('ledger-pagination')
+  const totalEl = document.getElementById('ledger-total')
   listEl.innerHTML = skeletonRows()
 
   try {
@@ -468,12 +468,12 @@ export async function loadGivingsLedger(page = 1) {
     }
 
     const params = new URLSearchParams({ page: String(page), limit: '25' })
-    if (_ledgerMemberFilterId)                                     params.append('memberId', _ledgerMemberFilterId)
-    if (document.getElementById('ledger-project-filter').value)   params.append('projectId', document.getElementById('ledger-project-filter').value)
-    if (document.getElementById('ledger-method-filter').value)    params.append('paymentMethod', document.getElementById('ledger-method-filter').value)
-    if (document.getElementById('ledger-from-filter').value)      params.append('from', new Date(document.getElementById('ledger-from-filter').value).toISOString())
-    if (document.getElementById('ledger-to-filter').value)        params.append('to', new Date(document.getElementById('ledger-to-filter').value + 'T23:59:59').toISOString())
-    if (document.getElementById('ledger-voided-filter').checked)  params.append('includeVoided', '1')
+    if (_ledgerMemberFilterId) params.append('memberId', _ledgerMemberFilterId)
+    if (document.getElementById('ledger-project-filter').value) params.append('projectId', document.getElementById('ledger-project-filter').value)
+    if (document.getElementById('ledger-method-filter').value) params.append('paymentMethod', document.getElementById('ledger-method-filter').value)
+    if (document.getElementById('ledger-from-filter').value) params.append('from', new Date(document.getElementById('ledger-from-filter').value).toISOString())
+    if (document.getElementById('ledger-to-filter').value) params.append('to', new Date(document.getElementById('ledger-to-filter').value + 'T23:59:59').toISOString())
+    if (document.getElementById('ledger-voided-filter').checked) params.append('includeVoided', '1')
 
     const res = await api.get('/givings?' + params.toString())
 
@@ -489,13 +489,13 @@ export async function loadGivingsLedger(page = 1) {
         <thead><tr><th>Member</th><th>Project</th><th>Amount</th><th>Method</th><th>Date</th><th>Ref</th><th>Status</th><th></th></tr></thead>
         <tbody>
           ${res.items.map(g => {
-            const memberCell = g.isAnonymous
-              ? (g.memberNameActual
-                  ? `<em>Anonymous</em> <span style="color:var(--color-text-muted);font-size:0.75em;">(${escHtml(g.memberNameActual)})</span>`
-                  : '<em>Anonymous</em>')
-              : (g.memberName ? escHtml(g.memberName) : '<span class="text-muted">—</span>')
-            const voidedStyle = g.voided ? 'opacity:0.55;' : ''
-            return `
+      const memberCell = g.isAnonymous
+        ? (g.memberNameActual
+          ? `<em>Anonymous</em> <span style="color:var(--color-text-muted);font-size:0.75em;">(${escHtml(g.memberNameActual)})</span>`
+          : '<em>Anonymous</em>')
+        : (g.memberName ? escHtml(g.memberName) : '<span class="text-muted">—</span>')
+      const voidedStyle = g.voided ? 'opacity:0.55;' : ''
+      return `
               <tr style="${voidedStyle}">
                 <td data-label="Member">${memberCell}</td>
                 <td data-label="Project">${escHtml(g.projectName || '—')}</td>
@@ -513,7 +513,7 @@ export async function loadGivingsLedger(page = 1) {
                 </td>
               </tr>
             `
-          }).join('')}
+    }).join('')}
         </tbody>
       </table>
     `
@@ -554,7 +554,7 @@ function renderLedgerMemberSearch(query) {
 
 window.openGivingModal = async (givingId) => {
   _givingEditId = givingId
-  const alertEl  = document.getElementById('giving-modal-alert')
+  const alertEl = document.getElementById('giving-modal-alert')
   alertEl.className = 'hidden'
   document.getElementById('giving-modal-title').textContent = givingId ? 'Edit Giving' : 'Record Giving'
 
@@ -584,13 +584,13 @@ window.openGivingModal = async (givingId) => {
       if (g.memberId) {
         setGivingMember(g.memberId, g.memberNameActual || (g.memberName !== 'Anonymous' ? g.memberName : null) || 'Member')
       }
-      document.getElementById('giving-anon-check').checked     = g.isAnonymous
-      projectSel.value                                          = g.projectId
-      document.getElementById('giving-amount-input').value     = g.amount
-      document.getElementById('giving-method-input').value     = g.paymentMethod
-      document.getElementById('giving-reference-input').value  = g.reference || ''
-      document.getElementById('giving-note-input').value       = g.note || ''
-      document.getElementById('giving-date-input').value       = g.givenAt.slice(0, 16)
+      document.getElementById('giving-anon-check').checked = g.isAnonymous
+      projectSel.value = g.projectId
+      document.getElementById('giving-amount-input').value = g.amount
+      document.getElementById('giving-method-input').value = g.paymentMethod
+      document.getElementById('giving-reference-input').value = g.reference || ''
+      document.getElementById('giving-note-input').value = g.note || ''
+      document.getElementById('giving-date-input').value = g.givenAt.slice(0, 16)
     } catch (err) {
       toast('Failed to load giving: ' + (err.message || ''), 'danger')
       return
@@ -647,24 +647,24 @@ document.getElementById('giving-member-results')?.addEventListener('click', e =>
 })
 
 window.saveGiving = async () => {
-  const btn     = document.getElementById('giving-save-btn')
+  const btn = document.getElementById('giving-save-btn')
   const alertEl = document.getElementById('giving-modal-alert')
   alertEl.className = 'hidden'
-  const amount  = parseFloat(document.getElementById('giving-amount-input').value)
+  const amount = parseFloat(document.getElementById('giving-amount-input').value)
   const project = document.getElementById('giving-project-input').value
-  if (!project)       { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Project is required.'; return }
+  if (!project) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Project is required.'; return }
   if (!amount || amount <= 0) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'A positive amount is required.'; return }
 
   const givenAt = document.getElementById('giving-date-input').value
   const body = {
-    memberId:      _givingSelectedProfileId || null,
-    isAnonymous:   document.getElementById('giving-anon-check').checked,
-    projectId:     project,
+    memberId: _givingSelectedProfileId || null,
+    isAnonymous: document.getElementById('giving-anon-check').checked,
+    projectId: project,
     amount,
     paymentMethod: document.getElementById('giving-method-input').value,
-    reference:     document.getElementById('giving-reference-input').value.trim() || null,
-    note:          document.getElementById('giving-note-input').value.trim() || null,
-    givenAt:       givenAt ? new Date(givenAt).toISOString() : undefined,
+    reference: document.getElementById('giving-reference-input').value.trim() || null,
+    note: document.getElementById('giving-note-input').value.trim() || null,
+    givenAt: givenAt ? new Date(givenAt).toISOString() : undefined,
   }
 
   btn.disabled = true; btn.textContent = 'Saving…'
@@ -717,7 +717,7 @@ export async function loadGivingProjects() {
   listEl.innerHTML = skeletonRows()
   try {
     const projects = await api.get('/givings/projects')
-    _projectsAll   = projects
+    _projectsAll = projects
     _projectsCache = new Map(projects.map(p => [p.id, p]))
     renderGivingProjectsList()
   } catch {
@@ -732,7 +732,7 @@ function renderGivingProjectsList() {
     return
   }
 
-  const q      = document.getElementById('project-search')?.value.trim().toLowerCase() || ''
+  const q = document.getElementById('project-search')?.value.trim().toLowerCase() || ''
   const active = document.getElementById('project-active-filter')?.value || ''
 
   const projects = _projectsAll.filter(p => {
@@ -779,15 +779,15 @@ window.openProjectModal = (id) => {
   if (id) {
     const p = _projectsCache.get(id)
     document.getElementById('project-modal-title').textContent = 'Edit Project'
-    document.getElementById('project-name-input').value   = p?.name   || ''
-    document.getElementById('project-desc-input').value   = p?.description || ''
+    document.getElementById('project-name-input').value = p?.name || ''
+    document.getElementById('project-desc-input').value = p?.description || ''
     document.getElementById('project-target-input').value = p?.targetAmount ?? ''
     document.getElementById('project-active-input').checked = p?.isActive ?? true
   } else {
     document.getElementById('project-modal-title').textContent = 'New Project'
-    document.getElementById('project-name-input').value    = ''
-    document.getElementById('project-desc-input').value    = ''
-    document.getElementById('project-target-input').value  = ''
+    document.getElementById('project-name-input').value = ''
+    document.getElementById('project-desc-input').value = ''
+    document.getElementById('project-target-input').value = ''
     document.getElementById('project-active-input').checked = true
   }
   document.getElementById('project-modal').classList.add('open')
@@ -799,9 +799,9 @@ window.closeProjectModal = () => {
 }
 
 window.saveProject = async () => {
-  const btn     = document.getElementById('project-save-btn')
+  const btn = document.getElementById('project-save-btn')
   const alertEl = document.getElementById('project-modal-alert')
-  const name    = document.getElementById('project-name-input').value.trim()
+  const name = document.getElementById('project-name-input').value.trim()
   alertEl.className = 'hidden'
   if (!name) { alertEl.className = 'alert alert-danger'; alertEl.textContent = 'Name is required.'; return }
   const target = document.getElementById('project-target-input').value.trim()
@@ -896,11 +896,11 @@ function renderCorrectionRequestsList() {
       <thead><tr><th>Requester</th><th>Giving</th><th>Proposed</th><th>Status</th><th>Date</th><th></th></tr></thead>
       <tbody>
         ${requests.map(r => {
-          const proposed = r.proposedData || {}
-          const proposedStr = Object.entries(proposed)
-            .map(([k, v]) => `${k}: ${k === 'amount' ? fmtKES(v) : v}`)
-            .join(', ') || '—'
-          return `
+    const proposed = r.proposedData || {}
+    const proposedStr = Object.entries(proposed)
+      .map(([k, v]) => `${k}: ${k === 'amount' ? fmtKES(v) : v}`)
+      .join(', ') || '—'
+    return `
             <tr>
               <td data-label="Requester">${escHtml(r.requester.name)}</td>
               <td data-label="Giving">${r.giving ? `${fmtKES(r.giving.amount)} · ${escHtml(r.giving.projectName || '—')}` : '—'}</td>
@@ -912,7 +912,7 @@ function renderCorrectionRequestsList() {
               </td>
             </tr>
           `
-        }).join('')}
+  }).join('')}
       </tbody>
     </table>
   `
@@ -938,14 +938,14 @@ window.openCorrectionReviewModal = async (id) => {
       <table style="font-size:var(--font-size-sm);">
         <thead><tr><th>Field</th><th>Current</th><th>Proposed</th></tr></thead>
         <tbody>
-          ${['amount','paymentMethod','reference','note'].map(f => {
-            const cur = f === 'amount' ? fmtKES(g.amount) : (g[f] || '—')
-            const prop = f in proposed
-              ? (f === 'amount' ? fmtKES(proposed[f]) : (proposed[f] || '—'))
-              : null
-            if (!prop) return ''
-            return `<tr><td>${f}</td><td>${cur}</td><td style="font-weight:600;color:var(--color-primary);">${escHtml(String(prop))}</td></tr>`
-          }).join('')}
+          ${['amount', 'paymentMethod', 'reference', 'note'].map(f => {
+      const cur = f === 'amount' ? fmtKES(g.amount) : (g[f] || '—')
+      const prop = f in proposed
+        ? (f === 'amount' ? fmtKES(proposed[f]) : (proposed[f] || '—'))
+        : null
+      if (!prop) return ''
+      return `<tr><td>${f}</td><td>${cur}</td><td style="font-weight:600;color:var(--color-primary);">${escHtml(String(prop))}</td></tr>`
+    }).join('')}
         </tbody>
       </table>
     `
@@ -961,8 +961,8 @@ window.closeCorrectionReviewModal = () => {
 
 window.resolveCorrection = async (action) => {
   const approveBtn = document.getElementById('correction-approve-btn')
-  const rejectBtn  = document.getElementById('correction-reject-btn')
-  const alertEl    = document.getElementById('correction-review-alert')
+  const rejectBtn = document.getElementById('correction-reject-btn')
+  const alertEl = document.getElementById('correction-review-alert')
   alertEl.className = 'hidden'
   approveBtn.disabled = true; rejectBtn.disabled = true
 
@@ -995,15 +995,15 @@ export function wireGivingsAdminPanel() {
   document.getElementById('ledger-project-filter')?.addEventListener('change', () => { _ledgerPage = 1; loadGivingsLedger(1) })
   document.getElementById('ledger-method-filter')?.addEventListener('change', () => { _ledgerPage = 1; loadGivingsLedger(1) })
   document.getElementById('ledger-voided-filter')?.addEventListener('change', () => { _ledgerPage = 1; loadGivingsLedger(1) })
-  ;['ledger-from-filter', 'ledger-to-filter'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', () => {
-      clearTimeout(_ledgerFilterTimer)
-      _ledgerFilterTimer = setTimeout(() => { _ledgerPage = 1; loadGivingsLedger(1) }, 400)
+    ;['ledger-from-filter', 'ledger-to-filter'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => {
+        clearTimeout(_ledgerFilterTimer)
+        _ledgerFilterTimer = setTimeout(() => { _ledgerPage = 1; loadGivingsLedger(1) }, 400)
+      })
     })
-  })
   document.getElementById('ledger-member-search')?.addEventListener('focus', e => {
     if (!_ledgerSlimMembers.length) {
-      api.get('/members/slim').then(data => { _ledgerSlimMembers = data; renderLedgerMemberSearch(e.target.value.trim()) }).catch(() => {})
+      api.get('/members/slim').then(data => { _ledgerSlimMembers = data; renderLedgerMemberSearch(e.target.value.trim()) }).catch(() => { })
     } else {
       renderLedgerMemberSearch(e.target.value.trim())
     }
@@ -1030,12 +1030,12 @@ export function wireGivingsAdminPanel() {
   document.getElementById('project-search')?.addEventListener('input', renderGivingProjectsList)
   document.getElementById('project-active-filter')?.addEventListener('change', renderGivingProjectsList)
 
-  ;['pledge-project-filter', 'pledge-status-filter'].forEach(id => {
-    document.getElementById(id)?.addEventListener('change', () => loadPledgesAdmin())
-  })
+    ;['pledge-project-filter', 'pledge-status-filter'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', () => loadPledgesAdmin())
+    })
   document.getElementById('pledge-filter-member-search')?.addEventListener('focus', e => {
     if (!_pledgeSlimMembers.length) {
-      api.get('/members/slim').then(data => { _pledgeSlimMembers = data; renderPledgeMemberFilterSearch(e.target.value.trim()) }).catch(() => {})
+      api.get('/members/slim').then(data => { _pledgeSlimMembers = data; renderPledgeMemberFilterSearch(e.target.value.trim()) }).catch(() => { })
     } else {
       renderPledgeMemberFilterSearch(e.target.value.trim())
     }
